@@ -1,0 +1,450 @@
+---
+title: "Regular expressions"
+subtitle: "Describe a pattern, then test where it fails"
+format:
+  revealjs:
+    theme: simple
+    css: styles/slides.css
+    slide-number: true
+    transition: none
+    code-overflow: wrap
+    center: false
+---
+
+## Review from last week: what can we conclude?
+
+We want to analyze income (`Y`), but some people do not report it. Let `R = 1` mean income is missing; age (`X`) is observed for everyone.
+
+Older participants are more likely to leave income blank.
+
+**Think, then tell a partner:** What does this say about `R` and `X`? Does it prove that the data are MAR rather than MNAR?
+
+## Review: what the evidence can tell us
+
+An association between `R` and observed age `X` is evidence **against MCAR**.
+
+It does **not** establish MAR: missingness could also depend on the income `Y` that we cannot see when it is missing.
+
+Our question was how `P(R | Y, X)` behaves. The unobserved part takes more than a plot to resolve.
+
+## Review: when a cleaning rule changes
+
+Last week, a pipeline standardized `D. & C.` to `D&C`. Now we encounter `D & C` as well.
+
+**With a neighbor:** What should we save so that we can revise the rule, reprocess earlier rows, and tell which output used which rule?
+
+## Review: make a revision possible
+
+Keep the original strings, the cleaning rule or pipeline version, and any information the transformation learned from data. Reprocess affected records under a documented version.
+
+Today we will write a *more flexible* rule for patterned text. It still needs examples, counterexamples, and versioning when we change it.
+
+## Today's question
+
+How do we identify information with the same structure but different words or numbers?
+
+```text
+84043-4820
+(801) 555-0142
+first.last+class@byu.edu
+1 Nephi 8:27
+Doctrine and Covenants 121:35
+```
+
+We will begin with patterns small enough to explain at a whiteboard, then apply the same ideas to actual talks.
+
+## A pattern describes a set of strings
+
+`John 8:31` is one string. A pattern describes strings with the same structure:
+
+```text
+book     space    chapter    :    verse
+John       ␠         8       :     31
+John       ␠        14       :     17
+```
+
+Build descriptions from **literals**, **choices**, and **repetition**. Before writing code, say in words what should match.
+
+## First stop: where does a match start and end?
+
+Consider `r"\d{5}"` and the field `ZIP: 84043`.
+
+**Predict with a partner:** What do `re.search()` and `re.fullmatch()` return? What changes if the field is just `84043`?
+
+## Check the matching question
+
+```python
+import re
+
+re.search(r"\d{5}", "ZIP: 84043").group()
+re.fullmatch(r"\d{5}", "ZIP: 84043")
+re.fullmatch(r"\d{5}", "84043").group()
+```
+
+```text
+'84043'
+None
+'84043'
+```
+
+`search` locates a piece *inside* text; `fullmatch` checks the *whole* field. The same pattern can answer different questions.
+
+## Read a short pattern
+
+```python
+r"\d{5}"
+```
+
+| Piece | Meaning |
+|:--|:--|
+| `\d` | One digit |
+| `{5}` | Repeat the preceding item exactly five times |
+| `r"..."` | Pass backslashes to the regex engine unchanged |
+
+`re.search(r"\d{5}", "ID84043X")` also finds `84043`. Whether that is useful depends on our question.
+
+## What do these pieces mean?
+
+| Piece | Meaning | Example |
+|:--|:--|:--|
+| `\d` | a digit | `8` |
+| `[.-]` | one dot **or** hyphen | `.` |
+| `\.` | a literal dot | `.` |
+| `\s` | whitespace | ordinary or nonbreaking space |
+| `+` | one or more | `\d+` |
+| `?` | zero or one | an optional group |
+
+In regex, an unescaped `.` matches almost any character. Literal parentheses also need `\(` and `\)`.
+
+## Choices need a group
+
+```python
+r"\d{3}(?:-\d{2})?"
+```
+
+Read it aloud: three digits, then **optionally** a hyphen and two digits, as in a short inventory code.
+
+`(?:...)` holds pieces together without making an output field. `A|B` means choose A or B.
+
+**Quick check:** Does the pattern allow `801-5`? How about `801-55`?
+
+## Check the choice
+
+```python
+code_pattern = r"\d{3}(?:-\d{2})?"
+[(value, bool(re.fullmatch(code_pattern, value)))
+ for value in ["801-5", "801-55"]]
+```
+
+```text
+[('801-5', False), ('801-55', True)]
+```
+
+The `?` applies to the **whole group**. Use `fullmatch` when checking whether the entire field conforms to a rule.
+
+## Whiteboard challenge: four groups
+
+Divide into **four groups**. If we have more groups, repeat A through D. Each group takes one problem on the next slide.
+
+1. Write a short regex **without Python quotes** that accepts your target examples as whole fields.
+2. Check it against the example it should reject.
+3. Put the regex on the board; explain what each part does and where the pattern might fail on new data.
+
+**Work: 5 minutes. Board and discussion: 7 minutes.** You can look at the pattern pieces on the previous slides.
+
+## Your group's problem
+
+| Group | Accept these whole fields | Reject this |
+|:--|:--|:--|
+| **A · ZIP** | `84043`, `84043-4820` | `84043-482` |
+| **B · phone** | `801-555-0142`, `801.555.0142` | `8015550142` |
+| **C · campus email** | `tom@byu.edu`, `tom7@byu.edu` | `tom@byuXedu` |
+| **D · citation** | `John 8:31`, `Alma 34:32` | `Mosiah 3:19` |
+
+Scope C to letters or digits before `@` and the literal domain `byu.edu`. D accepts only `John` or `Alma`, a space, chapter, colon, and verse.
+
+## Board discussion: explain the rules
+
+As each group writes its pattern, everyone else should ask:
+
+- Which piece makes the rejected example fail?
+- Does the pattern accidentally accept a close variant? Give one example.
+- Are we testing a whole field or looking inside longer text?
+
+**Hold off on running code** until we can explain each group's rule. Then compare with the next slides.
+
+## Group A: optional ZIP extension
+
+One answer:
+
+```python
+r"\d{5}(?:-\d{4})?"
+```
+
+```text
+84043        → True
+84043-4820   → True
+84043-482    → False
+```
+
+The group makes the entire four-digit extension optional. It says nothing about whether the ZIP is assigned to a real place.
+
+## Group B: one separator from a set
+
+One answer:
+
+```python
+r"\d{3}[-.]\d{3}[-.]\d{4}"
+```
+
+```text
+801-555-0142   → True
+801.555.0142   → True
+8015550142     → False
+```
+
+**Challenge:** It also accepts `801-555.0142`. Is that consistent with the specification you intended?
+
+## Group C: a deliberately narrow email rule
+
+One answer:
+
+```python
+r"[A-Za-z0-9]+@byu\.edu"
+```
+
+```text
+tom@byu.edu    → True
+tom7@byu.edu   → True
+tom@byuXedu    → False
+```
+
+The `\.` is a literal dot. This rule misses `first.last@byu.edu`. Add that test when the task changes.
+
+## Group D: two allowed book names
+
+One answer:
+
+```python
+r"(?:John|Alma) \d+:\d+"
+```
+
+```text
+John 8:31     → True
+Alma 34:32    → True
+Mosiah 3:19   → False
+```
+
+The alternatives describe **book names**, then `\d+` permits chapters and verses with different numbers of digits.
+
+## What changed when the data got messier?
+
+The small rule `r"(?:John|Alma) \d+:\d+"` assumes a short book name, ordinary space, and one verse.
+
+Our two talk records include `1 Nephi 8:27`, `D&C 19:16`, `Doctrine and Covenants 121:35`, and `Alma 34:32–33`.
+
+**Pause with a partner:** Name one assumption each example breaks. Which of the pieces we have already learned could help?
+
+## See the actual source text
+
+```python
+import pandas as pd
+talks = pd.read_csv("../data/talks_sample.csv")
+print(talks[["talk_name", "conference"]].to_string(index=False))
+```
+
+```text
+                            talk_name   conference
+                      Now Is the Time October 2018
+The Sacrament Can Help Us Become Holy October 2016
+```
+
+These are the **two talks** in the course sample. `text` is the full cleaned talk text; we keep it while extracting separate fields.
+
+## What does the text really contain?
+
+```text
+"... (1 Nephi 8:27). ..."
+"... (Alma 34:32–33). ..."
+"... (D&C 19:16). ..."
+```
+
+```python
+first = re.search(r"1\s+Nephi\s+\d+:\d+", talks.loc[0, "text"])
+print(repr(first.group()))
+```
+
+```text
+'1\xa0Nephi 8:27'
+```
+
+That `\xa0` is a **nonbreaking space**. Python's `\s+` matches it. A verse range can use an en dash (`–`) rather than `-`.
+
+## Start small, then check what we lost
+
+```python
+re.findall(r"John\s+\d+:\d+", talks.loc[0, "text"])
+```
+
+```text
+['John 8:31', 'John 14:17', 'John 16:33']
+```
+
+The first match came from `John 8:31–32`. Our rule did **not** capture the range.
+
+## Think, pair, share: test a proposed rule
+
+An assistant proposes `r"[A-Za-z]+ \d+:\d+"`.
+
+**Think:** For each input below, predict the *actual substring* returned by `re.findall()`, or say `[]`.
+
+```text
+John 8:31–32
+1 Nephi 8:27
+D&C 19:16
+Doctrine and Covenants 121:35
+```
+
+**Pair:** Find a missed reference and a misleading partial match. **Share:** Which failure would you repair first and why?
+
+## Debrief: what the proposed rule extracts
+
+```text
+John 8:31–32                    → ['John 8:31']
+1 Nephi 8:27                    → ['Nephi 8:27']
+D&C 19:16                       → ['C 19:16']
+Doctrine and Covenants 121:35   → ['Covenants 121:35']
+```
+
+The pattern can return a plausible **partial** citation. Write target outputs and counterexamples before making a pattern more ambitious.
+
+## Describe the citation before coding it
+
+```text
+book + whitespace + chapter + : + starting verse + optional range
+```
+
+For this sample, book is one of `Doctrine and Covenants`, `D&C`, numbered `Nephi`, `John`, `Alma`, or `Mosiah`.
+
+Use named groups to give the extracted parts names. A range may use `-` or `–`.
+
+## A rule for the sample's target books
+
+```python
+citation_pattern = (
+    r"\b(?P<book>Doctrine\s+and\s+Covenants|D&C|"
+    r"[1-3]\s+Nephi|John|Alma|Mosiah)"
+    r"\s+(?P<chapter>\d{1,3}):(?P<verse_start>\d{1,3})"
+    r"(?:[-–](?P<verse_end>\d{1,3}))?\b"
+)
+```
+
+`(?P<book>...)` captures a column; `(?:...)` groups an optional range without a separate column. This rule covers *selected books in our sample*.
+
+## Before running it: inspect one capture
+
+For `Alma 34:32–33`, what should the four named fields contain?
+
+```text
+book         → ?
+chapter      → ?
+verse_start  → ?
+verse_end    → ?
+```
+
+**Compare with a neighbor**, then check the result on the next slide.
+
+## Check the captured fields
+
+```python
+re.search(citation_pattern, "Alma 34:32–33").groupdict()
+```
+
+```text
+{'book': 'Alma', 'chapter': '34',
+ 'verse_start': '32', 'verse_end': '33'}
+```
+
+For `John 14:17`, `verse_end` is `None` because the optional range is absent. In pandas, that missing field displays as `NaN`.
+
+## Different questions, different operations
+
+| Question | Tool | Result |
+|:--|:--|:--|
+| Is there a match? | `.str.contains()` | A Boolean per talk |
+| What is the first match? | `.str.extract()` | Named fields per talk |
+| What are **all** matches? | `.str.extractall()` | One row per match |
+
+**Predict:** If a talk has three `John` citations, how many rows does `.str.extractall()` create for that talk?
+
+## Extract every citation we specified
+
+```python
+matches = talks["text"].str.extractall(citation_pattern)
+citations = matches.reset_index().rename(columns={"level_0": "talk_row"})
+citations.insert(0, "talk_name", talks.loc[citations["talk_row"], "talk_name"].to_numpy())
+print(citations[["book", "chapter", "verse_start", "verse_end"]].head(5))
+```
+
+```text
+                     book chapter verse_start verse_end
+0                 1 Nephi       8          27       NaN
+1                 1 Nephi       8          28       NaN
+2  Doctrine and Covenants     121          35       NaN
+3                    Alma      34          32        33
+4                    John       8          31        32
+```
+
+Each matched reference becomes a row. The missing end verse means a single-verse reference.
+
+## Preserve and standardize separately
+
+```python
+citations["book_clean"] = (
+    citations["book"]
+    .str.replace("\u00a0", " ", regex=False)
+    .replace({"D&C": "Doctrine and Covenants"})
+)
+print(citations.groupby("talk_name").size().to_string())
+```
+
+```text
+talk_name
+Now Is the Time                          7
+The Sacrament Can Help Us Become Holy    6
+```
+
+These are **matches under our rule**, not counts of every possible scripture reference. Keep the original talk text and extracted book beside `book_clean`.
+
+## One more trap: how far will `.*` go?
+
+**Predict with a partner:** How many strings does each pattern return from `(John 8:31) and (Alma 7:12)`?
+
+```python
+s = "(John 8:31) and (Alma 7:12)"
+re.findall(r"\(.*\)", s)   # greedy
+re.findall(r"\(.*?\)", s)  # lazy
+```
+
+Why might `.*` be risky when there are two references in the same sentence?
+
+## Greedy and lazy: reveal
+
+```text
+greedy → ['(John 8:31) and (Alma 7:12)']
+lazy   → ['(John 8:31)', '(Alma 7:12)']
+```
+
+Greedy `*` takes as much as it can while allowing a match. `*?` takes as little as it can. A pattern for the actual citation structure gives us still more control.
+
+## Exit question
+
+Explain in words what this part allows:
+
+```python
+r"(?:[-–](?P<verse_end>\d{1,3}))?"
+```
+
+Give one range it captures and one plausible reference our **whole citation rule** still misses. How would you test the latter?
+
+**Next time:** apply tested extraction rules to data gathered from a web page.

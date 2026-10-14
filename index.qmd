@@ -1,0 +1,25 @@
+---
+title: "Regular expressions: day 1"
+subtitle: "STAT 386 · Reading and building patterns"
+toc: false
+---
+
+Last week, we built cleaning pipelines that keep the original data and record which rules produced the cleaned values. Today we will describe *families* of strings when values vary in predictable ways.
+
+## Today's question
+
+How can a short pattern describe ZIP codes, phone numbers, email addresses, or a simple scripture reference? How can we tell when it matches too much or misses something?
+
+## Materials
+
+1. [Day 1 lecture slides](slides.html), with prediction questions and their answers.
+2. [Pattern guide](reference.html) for looking up the syntax used in class.
+
+## What you should be able to do
+
+- Explain how literal characters, classes, groups, and quantifiers combine into a pattern.
+- Distinguish finding text inside a string from checking an entire field.
+- Read a short regex, predict its matches, and explain a counterexample.
+- Write and defend a short pattern with your group at the whiteboard.
+
+In the next class we will apply these ideas to scripture references in the supplied conference talks. The earlier combined lecture and notebooks remain in the source package as drafts while we develop that lesson.

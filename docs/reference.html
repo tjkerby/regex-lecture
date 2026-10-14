@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pattern guide</title><link rel="stylesheet" href="assets/site.css"></head><body><nav class="site-nav"><strong>STAT 386 · Regex</strong><a href="index.html">Overview</a><a href="slides.html">Day 1 slides</a><a href="reference.html" aria-current="page">Pattern guide</a></nav><main><h1>Pattern guide</h1><p class="site-subtitle">The pieces we use today</p><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Piece</th>
+<th style="text-align: left;">Meaning in today’s examples</th>
+<th style="text-align: left;">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>John</code></td>
+<td style="text-align: left;">Literal characters</td>
+<td style="text-align: left;"><code>John 8:31</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>\d</code></td>
+<td style="text-align: left;">A digit</td>
+<td style="text-align: left;">Chapter or verse number</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>\s</code></td>
+<td style="text-align: left;">Whitespace, including the nonbreaking
+space in this dataset</td>
+<td style="text-align: left;"><code>1 Nephi</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>[.-]</code></td>
+<td style="text-align: left;">One listed character</td>
+<td style="text-align: left;">A dot or hyphen</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>\.</code></td>
+<td style="text-align: left;">A literal dot</td>
+<td style="text-align: left;">The dot in an email domain</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>{5}</code></td>
+<td style="text-align: left;">Exactly five repetitions</td>
+<td style="text-align: left;">A five digit ZIP code</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>{1,3}</code></td>
+<td style="text-align: left;">Between one and three repetitions</td>
+<td style="text-align: left;">Chapter digits</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>+</code></td>
+<td style="text-align: left;">One or more repetitions</td>
+<td style="text-align: left;"><code>\d+</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>?</code></td>
+<td style="text-align: left;">Zero or one of the previous item</td>
+<td style="text-align: left;">An optional verse range</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>(?:A|B)</code></td>
+<td style="text-align: left;">Either A or B, without capturing a
+field</td>
+<td style="text-align: left;">Two book names</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>(?P&lt;book&gt;...)</code></td>
+<td style="text-align: left;">Capture and name a field</td>
+<td style="text-align: left;">The book column</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>\b</code></td>
+<td style="text-align: left;">Boundary between word and nonword
+characters</td>
+<td style="text-align: left;">Before a ZIP code</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>^</code> and <code>$</code></td>
+<td style="text-align: left;">Start and end of a line/string in the
+usual single-line case</td>
+<td style="text-align: left;">Checking a whole field</td>
+</tr>
+</tbody>
+</table>
+<p>In Python, write regex strings as raw strings, such as
+<code>r"\d{5}"</code>, so Python passes the backslashes to the regex
+engine. <code>re.search()</code> finds text inside a larger string.
+<code>re.fullmatch()</code> checks an entire string.
+<code>re.findall()</code> returns the matches, and pandas
+<code>.str.extractall()</code> makes a row for each captured match.</p>
+<h2 id="things-to-test">Things to test</h2>
+<ul>
+<li>Does the pattern match inside a longer value when it should
+not?</li>
+<li>Does punctuation change the result?</li>
+<li>Does the input contain a nonbreaking space or an en dash?</li>
+<li>Are there two matches in one string, and are both returned?</li>
+<li>Does the pattern capture only the intended book, chapter, and
+verses?</li>
+</ul>
+<p>The citation pattern in this lesson describes recognizable text. It
+does not verify that a chapter or verse exists. The email example
+similarly finds common shapes without covering every valid address.</p>
+</main><footer class="site-footer">STAT 386 · Regular expressions for data wrangling</footer></body></html>

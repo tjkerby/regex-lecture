@@ -1,0 +1,376 @@
+---
+title: "Regular expressions: day 1"
+subtitle: "Reading and building patterns"
+format:
+  revealjs:
+    theme: simple
+    css: styles/slides.css
+    slide-number: true
+    transition: none
+    code-overflow: wrap
+    center: false
+---
+
+## Review: when a pipeline meets a new value
+
+Last week, our book-name column contained `Matt.` and `Matthew`. We standardized `Matt.` to `Matthew`.
+
+A new batch contains `Matt` too.
+
+**Talk with a neighbor:** What would you change? What must you keep if some rows were already processed under the earlier rule?
+
+## Review: change the rule, keep the evidence
+
+| Source value | Old rule | Revised rule |
+|:--|:--|:--|
+| `Matt.` | `Matthew` | `Matthew` |
+| `Matthew` | `Matthew` | `Matthew` |
+| `Matt` | `Matt` | `Matthew` |
+
+Keep the raw book name and record which pipeline version produced the standardized value. Reprocess earlier rows when the rule changes.
+
+An exact replacement works here because we have a small set of known values **in a book-name field**. We should not replace every occurrence of `Matt` in a whole talk.
+
+## Today's problem
+
+What if the number and placement of characters vary?
+
+~~~text
+84043              84043-4820
+801-555-0142       801.555.0142
+tom@byu.edu        tom7@byu.edu
+John 8:31          Alma 34:32
+~~~
+
+We need a way to describe the strings we want to find, rather than list them one at a time.
+
+## A regex describes a set of strings
+
+`Alma 7:12` is one value. The pattern `Alma \d+:\d+` describes many:
+
+~~~text
+Alma 7:12     ✓
+Alma 34:32    ✓
+John 8:31     ✗
+~~~
+
+The book and punctuation stay fixed. The chapter and verse can change. Here `\d` stands for a digit, and `+` means one or more of the preceding item. We will work through those pieces before asking you to build a pattern.
+
+## How we build larger patterns
+
+A regex is made from a few types of instructions:
+
+| Instruction | What it lets us describe |
+|:--|:--|
+| Exact text | A fixed book name or punctuation mark |
+| A choice | One allowed character or one allowed word |
+| Repetition | A chapter with one, two, or more digits |
+| Position | The beginning of a field or a word boundary |
+
+Putting instructions next to each other describes their order. We will learn the notation for each one in the next few examples.
+
+## Searching and checking a whole field
+
+`re.search()` finds a pattern **inside** a string. `re.fullmatch()` checks whether the **entire** string fits.
+
+Our pattern is the literal text `"cat"`. We wrap each result in `bool()` so the answer is `True` if there is a match and `False` otherwise. What will these three checks return?
+
+~~~python
+import re
+
+bool(re.search("cat", "The cat slept"))
+bool(re.fullmatch("cat", "The cat slept"))
+bool(re.fullmatch("cat", "cat"))
+~~~
+
+**Predict with a neighbor**, then compare with the next slide.
+
+## Check: search versus fullmatch
+
+~~~text
+search("cat", "The cat slept")     → True
+fullmatch("cat", "The cat slept")  → False
+fullmatch("cat", "cat")            → True
+~~~
+
+We used `bool()` to ask whether a match exists. A search can succeed even when the whole field does not fit the rule.
+
+## Literal characters and the dot
+
+Most characters match themselves. Some have special meanings.
+
+`r"byu.edu"`: the dot matches almost any character.
+
+`r"byu\.edu"`: the escaped dot matches a literal period.
+
+The `r` tells Python to pass the backslash to the regex engine. We will write patterns as raw strings from here on.
+
+**With a neighbor:** Which pattern accepts `byuXedu`? Which accepts `byu.edu`?
+
+## Check the dot
+
+~~~python
+values = ["byu.edu", "byuXedu"]
+for pattern in [r"byu.edu", r"byu\.edu"]:
+    print(pattern, [bool(re.fullmatch(pattern, v)) for v in values])
+~~~
+
+~~~text
+byu.edu   [True, True]
+byu\.edu  [True, False]
+~~~
+
+Escaping changes a special character back into the literal character.
+
+## Character classes choose one character
+
+`[.-]` matches **one** dot or hyphen. A range such as `[A-Z]` matches **one** capital letter.
+
+We can combine ranges: `[A-Za-z0-9]` matches **one** letter or digit. We will use that in the email exercise.
+
+~~~text
+r"801[-.]555"   matches   801-555   and   801.555
+~~~
+
+Inside `[ ]`, a dot usually has its ordinary meaning. Outside, `.` is a wildcard.
+
+**Predict:** Would `[.-]` match the two-character string `.-` as a whole field?
+
+## A negative character class
+
+`[^aeiou]` means **one character other than a lowercase vowel**.
+
+~~~python
+[bool(re.fullmatch(r"[^aeiou]", x)) for x in ["a", "b", "7"]]
+~~~
+
+~~~text
+[False, True, True]
+~~~
+
+It also accepts `7`. “Not a vowel” is broader than “a consonant.”
+
+## Useful shorthand classes
+
+| Pattern | One matching character |
+|:--|:--|
+| `\d` | digit |
+| `\s` | whitespace, including many spaces that look ordinary |
+| `\w` | word character, including letters, digits, and `_` |
+| `\D`, `\S`, `\W` | the corresponding opposites |
+
+`\w` is convenient, but it may include characters your task did not intend. In Python, it can also include Unicode letters.
+
+## Quantifiers change how many
+
+| Pattern | Number of repetitions | Example |
+|:--|:--|:--|
+| `\d{3}` | exactly 3 | `801` |
+| `\d{2,4}` | 2 to 4 | `12`, `8421` |
+| `\d+` | at least 1 | `7`, `343` |
+| `\d*` | 0 or more | `""`, `77` |
+| `u?` | 0 or 1 | `color`, `colour` in `colou?r` |
+
+A quantifier acts on the **item immediately before it**. That item can be a character or a class. On the next slides, we will make a whole group count as one item.
+
+## Groups choose whole alternatives
+
+`(?:red|blue) car` allows `red car` or `blue car`.
+
+~~~python
+[(v, bool(re.fullmatch(r"(?:red|blue) car", v)))
+ for v in ["red car", "blue car", "red truck"]]
+~~~
+
+~~~text
+[('red car', True), ('blue car', True), ('red truck', False)]
+~~~
+
+`(?: ... )` groups a choice. `|` separates the alternatives. We will use a named capturing group tomorrow when we need an extracted column.
+
+## A class and a group are different
+
+| Pattern | Its choice |
+|:--|:--|
+| `[cd]` | one character, `c` or `d` |
+| `(?:cat|dog)` | one word, `cat` or `dog` |
+
+**Predict:** Does `[cat|dog]` match the whole word `cat`? Why might it still find *something* inside `cat` with `re.search`?
+
+## Check the class and the group
+
+~~~python
+print(bool(re.fullmatch(r"[cat|dog]", "cat")))
+print(re.search(r"[cat|dog]", "cat").group())
+print(bool(re.fullmatch(r"(?:cat|dog)", "cat")))
+~~~
+
+~~~text
+False
+'c'
+True
+~~~
+
+`[cat|dog]` still consumes **one character**. For whole words, choose between groups of characters.
+
+## Pause: what is being repeated?
+
+Compare these patterns on the whole string `hahaha!`:
+
+~~~python
+r"ha+!"       # repeat the a
+r"(?:ha)+!"   # repeat the group ha
+~~~
+
+**Think, then pair:** Which one matches? What string might the other match instead?
+
+## Check the quantifier's scope
+
+~~~python
+[(p, bool(re.fullmatch(p, "hahaha!")))
+ for p in [r"ha+!", r"(?:ha)+!"]]
+~~~
+
+~~~text
+[('ha+!', False), ('(?:ha)+!', True)]
+~~~
+
+`ha+!` accepts `haaa!`. `(?:ha)+!` accepts `hahaha!`.
+
+The parentheses determine what the `+` repeats.
+
+## Positions are different from characters
+
+| Position | Meaning in today's examples |
+|:--|:--|
+| `^` | start of the string |
+| `$` | end of the string |
+| `\b` | boundary between a word and a nonword character |
+
+These symbols do not consume a character. A word boundary can occur next to punctuation, not only next to a space.
+
+For a whole field, `re.fullmatch()` often states our question more directly than adding `^` and `$`.
+
+## Read and decipher
+
+**First think alone, then compare with a partner.** Put each pattern into words. Give an example it accepts and one it rejects.
+
+1. `r"\bcat\b"`
+2. `r"\b\d{5}\b"`
+3. `r"^[A-Z][a-z]+$"`
+
+For #2, what would `re.search` return from `84043-4820`?
+
+## Read and decipher: discuss the answers
+
+| Pattern | Reads as | Example match |
+|:--|:--|:--|
+| `\bcat\b` | the word `cat` | `cat!`, but not `bobcat` |
+| `\b\d{5}\b` | a five-digit token | `84043` in `84043-4820` |
+| `^[A-Z][a-z]+$` | a capitalized word with more lowercase letters | `Kerby`, but not `KERBY` |
+
+**Which result might be misleading?** A match to the first five digits does not establish that the entire field is a plain five-digit ZIP.
+
+## Whiteboard challenge
+
+Divide into **four groups**. If there are more than four groups, repeat A through D.
+
+1. Write a short regex **without Python quotes** for your group's whole-field rule.
+2. Check both accepted examples and the rejected example mentally.
+3. Write the pattern on the board. Explain each piece and propose a new test that could challenge it.
+
+**5 minutes to work, 7 minutes to share.** Wait for each explanation before viewing the solution slides.
+
+## Your group's rule
+
+| Group | Accept as whole fields | Reject |
+|:--|:--|:--|
+| **A: ZIP** | `84043`, `84043-4820` | `84043-482` |
+| **B: phone** | `801-555-0142`, `801.555.0142` | `8015550142` |
+| **C: campus email** | `tom@byu.edu`, `tom7@byu.edu` | `tom@byuXedu` |
+| **D: citation** | `John 8:31`, `Alma 34:32` | `Mosiah 3:19` |
+
+For C, allow letters and digits before `@` and require the literal domain `byu.edu`. For D, allow only John or Alma, a space, chapter, colon, and verse.
+
+## Board discussion
+
+As each group writes its rule, everyone else should ask:
+
+- Which piece makes the rejected example fail?
+- What *new* value would you test?
+- Does your rule look for part of a string, or check the whole field?
+
+Different patterns may fit the examples. We can compare how they behave on an unseen value.
+
+## Group A: ZIP
+
+One possible answer: `\d{5}(?:-\d{4})?`
+
+~~~text
+84043        → True
+84043-4820   → True
+84043-482    → False
+~~~
+
+The optional group contains the hyphen **and** the four digits.
+
+**New test:** Would it accept a five-digit number that is not an assigned ZIP?
+
+## Group B: phone
+
+One possible answer: `\d{3}[-.]\d{3}[-.]\d{4}`
+
+~~~text
+801-555-0142   → True
+801.555.0142   → True
+8015550142     → False
+~~~
+
+**New test:** It also accepts `801-555.0142`. Is a mixed separator acceptable for our task?
+
+## Group C: campus email
+
+One possible answer: `[A-Za-z0-9]+@byu\.edu`
+
+~~~text
+tom@byu.edu    → True
+tom7@byu.edu   → True
+tom@byuXedu    → False
+~~~
+
+**New test:** It rejects `first.last@byu.edu`. How would the rule change if that address appeared in our data?
+
+## Group D: citation
+
+One possible answer: `(?:John|Alma) \d+:\d+`
+
+~~~text
+John 8:31     → True
+Alma 34:32    → True
+Mosiah 3:19   → False
+~~~
+
+**New test:** What happens with `John 8:31–32`? A partial match can be mistaken for a complete citation.
+
+## The next challenge: actual talk text
+
+In our two sample talks we find:
+
+~~~text
+1 Nephi 8:27
+Alma 34:32–33
+Doctrine and Covenants 121:35
+D&C 19:16
+~~~
+
+**With a partner:** Name two assumptions from group D's rule that these values challenge. What would you inspect before making the rule more complicated?
+
+Tomorrow we will build a citation pattern in stages and check its matches against the talk text.
+
+## Exit question
+
+Explain `r"[A-Z][a-z]{2,}"` in ordinary language.
+
+For a whole-field check, would it accept `Alma`? `1 Nephi`? Give one more value you would test.
+
+The goal today was to read a pattern, compose a short one, and explain where its rule might fail.
