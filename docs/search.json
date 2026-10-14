@@ -1,5 +1,19 @@
 [
   {
+    "objectID": "reference.html",
+    "href": "reference.html",
+    "title": "Pattern guide",
+    "section": "",
+    "text": "Piece\nMeaning in today’s examples\nExample\n\n\n\n\nJohn\nLiteral characters\nJohn 8:31\n\n\n\\d\nA digit\nChapter or verse number\n\n\n\\s\nWhitespace, including the nonbreaking space in this dataset\n1 Nephi\n\n\n[.-]\nOne listed character\nA dot or hyphen\n\n\n\\.\nA literal dot\nThe dot in an email domain\n\n\n{5}\nExactly five repetitions\nA five digit ZIP code\n\n\n{1,3}\nBetween one and three repetitions\nChapter digits\n\n\n+\nOne or more repetitions\n\\d+\n\n\n?\nZero or one of the previous item\nAn optional verse range\n\n\n(?:A|B)\nEither A or B, without capturing a field\nTwo book names\n\n\n(?P&lt;book&gt;...)\nCapture and name a field\nThe book column\n\n\n\\b\nBoundary between word and nonword characters\nBefore a ZIP code\n\n\n^ and $\nStart and end of a line/string in the usual single-line case\nChecking a whole field\nIn Python, write regex strings as raw strings, such as r\"\\d{5}\", so Python passes the backslashes to the regex engine. re.search() finds text inside a larger string. re.fullmatch() checks an entire string. re.findall() returns the matches, and pandas .str.extractall() makes a row for each captured match."
+  },
+  {
+    "objectID": "reference.html#things-to-test",
+    "href": "reference.html#things-to-test",
+    "title": "Pattern guide",
+    "section": "Things to test",
+    "text": "Things to test\n\nDoes the pattern match inside a longer value when it should not?\nDoes punctuation change the result?\nDoes the input contain a nonbreaking space or an en dash?\nAre there two matches in one string, and are both returned?\nDoes the pattern capture only the intended book, chapter, and verses?\n\nThe citation pattern in this lesson describes recognizable text. It does not verify that a chapter or verse exists. The email example similarly finds common shapes without covering every valid address."
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Regular expressions: day 1",
