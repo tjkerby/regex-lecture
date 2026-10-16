@@ -1,0 +1,32 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - index.qmd
+    - slides.qmd
+    - reference.qmd
+  resources:
+    - data/talks_sample.csv
+    - notebooks/regex_follow_along.ipynb
+    - notebooks/regex_practice.ipynb
+
+website:
+  title: "Regex for data wrangling"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Overview
+      - href: slides.qmd
+        text: Lecture slides
+      - href: reference.qmd
+        text: Pattern guide
+
+format:
+  html:
+    theme: cosmo
+    css: styles/site.css
+    toc: true
+    code-copy: true
+
+execute:
+  echo: true

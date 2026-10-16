@@ -1,0 +1,32 @@
+---
+title: "Pattern guide"
+subtitle: "The pieces we use today"
+---
+
+| Piece | Meaning in today's examples | Example |
+|:--|:--|:--|
+| `John` | Literal characters | `John 8:31` |
+| `\d` | A digit | Chapter or verse number |
+| `\s` | Whitespace, including the nonbreaking space in this dataset | `1 Nephi` |
+| `[.-]` | One listed character | A dot or hyphen |
+| `\.` | A literal dot | The dot in an email domain |
+| `{5}` | Exactly five repetitions | A five digit ZIP code |
+| `{1,3}` | Between one and three repetitions | Chapter digits |
+| `+` | One or more repetitions | `\d+` |
+| `?` | Zero or one of the previous item | An optional verse range |
+| `(?:A|B)` | Either A or B, without capturing a field | Two book names |
+| `(?P<book>...)` | Capture and name a field | The book column |
+| `\b` | Boundary between word and nonword characters | Before a ZIP code |
+| `^` and `$` | Start and end of a line/string in the usual single-line case | Checking a whole field |
+
+In Python, write regex strings as raw strings, such as `r"\d{5}"`, so Python passes the backslashes to the regex engine. `re.search()` finds text inside a larger string. `re.fullmatch()` checks an entire string. `re.findall()` returns the matches, and pandas `.str.extractall()` makes a row for each captured match.
+
+## Things to test
+
+- Does the pattern match inside a longer value when it should not?
+- Does punctuation change the result?
+- Does the input contain a nonbreaking space or an en dash?
+- Are there two matches in one string, and are both returned?
+- Does the pattern capture only the intended book, chapter, and verses?
+
+The citation pattern in this lesson describes recognizable text. It does not verify that a chapter or verse exists. The email example similarly finds common shapes without covering every valid address.

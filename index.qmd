@@ -1,0 +1,27 @@
+---
+title: "Regular expressions"
+subtitle: "STAT 386 · Reading patterns and checking real text"
+toc: false
+---
+
+We begin with a review of cleaning pipelines and learn to describe *families* of strings when values vary in predictable ways. The same slide deck continues with group challenges on optional and alternative forms, then builds a scripture citation pattern in stages and tests it against actual conference talks.
+
+## Today's question
+
+How can a short pattern describe ZIP codes, phone numbers, email addresses, or a simple scripture reference? How can we tell when it matches too much or misses something?
+
+## Materials
+
+1. [Lecture slides](slides.html), with prediction questions and their answers.
+2. [Pattern guide](reference.html) for looking up the syntax used in class.
+
+## What you should be able to do
+
+- Explain how literal characters, classes, groups, and quantifiers combine into a pattern.
+- Distinguish finding text inside a string from checking an entire field.
+- Read a short regex, predict its matches, and explain a counterexample.
+- Write and defend a short pattern with your group at the whiteboard.
+- Decide when a whole piece is optional and when forms require alternatives.
+- Recognize a plausible partial match and test a composed citation rule against the talk sample.
+
+The talk examples are a small introduction to extraction. The lab will carry the fuller workflow. The earlier combined lecture and notebooks remain in the source package as drafts.

@@ -1,0 +1,331 @@
+[
+  {
+    "objectID": "reference.html",
+    "href": "reference.html",
+    "title": "Pattern guide",
+    "section": "",
+    "text": "Piece\nMeaning in today’s examples\nExample\n\n\n\n\nJohn\nLiteral characters\nJohn 8:31\n\n\n\\d\nA digit\nChapter or verse number\n\n\n\\s\nWhitespace, including the nonbreaking space in this dataset\n1 Nephi\n\n\n[.-]\nOne listed character\nA dot or hyphen\n\n\n\\.\nA literal dot\nThe dot in an email domain\n\n\n{5}\nExactly five repetitions\nA five digit ZIP code\n\n\n{1,3}\nBetween one and three repetitions\nChapter digits\n\n\n+\nOne or more repetitions\n\\d+\n\n\n?\nZero or one of the previous item\nAn optional verse range\n\n\n(?:A|B)\nEither A or B, without capturing a field\nTwo book names\n\n\n(?P&lt;book&gt;...)\nCapture and name a field\nThe book column\n\n\n\\b\nBoundary between word and nonword characters\nBefore a ZIP code\n\n\n^ and $\nStart and end of a line/string in the usual single-line case\nChecking a whole field\nIn Python, write regex strings as raw strings, such as r\"\\d{5}\", so Python passes the backslashes to the regex engine. re.search() finds text inside a larger string. re.fullmatch() checks an entire string. re.findall() returns the matches, and pandas .str.extractall() makes a row for each captured match."
+  },
+  {
+    "objectID": "reference.html#things-to-test",
+    "href": "reference.html#things-to-test",
+    "title": "Pattern guide",
+    "section": "Things to test",
+    "text": "Things to test\n\nDoes the pattern match inside a longer value when it should not?\nDoes punctuation change the result?\nDoes the input contain a nonbreaking space or an en dash?\nAre there two matches in one string, and are both returned?\nDoes the pattern capture only the intended book, chapter, and verses?\n\nThe citation pattern in this lesson describes recognizable text. It does not verify that a chapter or verse exists. The email example similarly finds common shapes without covering every valid address."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Regular expressions",
+    "section": "",
+    "text": "We begin with a review of cleaning pipelines and learn to describe families of strings when values vary in predictable ways. The same slide deck continues with group challenges on optional and alternative forms, then builds a scripture citation pattern in stages and tests it against actual conference talks."
+  },
+  {
+    "objectID": "index.html#todays-question",
+    "href": "index.html#todays-question",
+    "title": "Regular expressions",
+    "section": "Today’s question",
+    "text": "Today’s question\nHow can a short pattern describe ZIP codes, phone numbers, email addresses, or a simple scripture reference? How can we tell when it matches too much or misses something?"
+  },
+  {
+    "objectID": "index.html#materials",
+    "href": "index.html#materials",
+    "title": "Regular expressions",
+    "section": "Materials",
+    "text": "Materials\n\nLecture slides, with prediction questions and their answers.\nPattern guide for looking up the syntax used in class."
+  },
+  {
+    "objectID": "index.html#what-you-should-be-able-to-do",
+    "href": "index.html#what-you-should-be-able-to-do",
+    "title": "Regular expressions",
+    "section": "What you should be able to do",
+    "text": "What you should be able to do\n\nExplain how literal characters, classes, groups, and quantifiers combine into a pattern.\nDistinguish finding text inside a string from checking an entire field.\nRead a short regex, predict its matches, and explain a counterexample.\nWrite and defend a short pattern with your group at the whiteboard.\nDecide when a whole piece is optional and when forms require alternatives.\nRecognize a plausible partial match and test a composed citation rule against the talk sample.\n\nThe talk examples are a small introduction to extraction. The lab will carry the fuller workflow. The earlier combined lecture and notebooks remain in the source package as drafts."
+  },
+  {
+    "objectID": "slides.html#review-when-a-pipeline-meets-a-new-value",
+    "href": "slides.html#review-when-a-pipeline-meets-a-new-value",
+    "title": "Regular expressions: day 1",
+    "section": "Review: when a pipeline meets a new value",
+    "text": "Review: when a pipeline meets a new value\nLast week, our book-name column contained Matt. and Matthew. We standardized Matt. to Matthew.\nA new batch contains Matt too.\nTalk with a neighbor: What would you change? What must you keep if some rows were already processed under the earlier rule?"
+  },
+  {
+    "objectID": "slides.html#review-change-the-rule-keep-the-evidence",
+    "href": "slides.html#review-change-the-rule-keep-the-evidence",
+    "title": "Regular expressions: day 1",
+    "section": "Review: change the rule, keep the evidence",
+    "text": "Review: change the rule, keep the evidence\n\n\n\nSource value\nOld rule\nRevised rule\n\n\n\n\nMatt.\nMatthew\nMatthew\n\n\nMatthew\nMatthew\nMatthew\n\n\nMatt\nMatt\nMatthew\n\n\n\nKeep the raw book name and record which pipeline version produced the standardized value. Reprocess earlier rows when the rule changes.\nAn exact replacement works here because we have a small set of known values in a book-name field. We should not replace every occurrence of Matt in a whole talk."
+  },
+  {
+    "objectID": "slides.html#todays-problem",
+    "href": "slides.html#todays-problem",
+    "title": "Regular expressions: day 1",
+    "section": "Today’s problem",
+    "text": "Today’s problem\nWhat if the number and placement of characters vary?\n84043              84043-4820\n801-555-0142       801.555.0142\ntom@byu.edu        tom7@byu.edu\nJohn 8:31          Alma 34:32\nWe need a way to describe the strings we want to find, rather than list them one at a time."
+  },
+  {
+    "objectID": "slides.html#a-regex-describes-a-set-of-strings",
+    "href": "slides.html#a-regex-describes-a-set-of-strings",
+    "title": "Regular expressions: day 1",
+    "section": "A regex describes a set of strings",
+    "text": "A regex describes a set of strings\nAlma 7:12 is one value. The pattern Alma \\d+:\\d+ describes many:\nAlma 7:12     ✓\nAlma 34:32    ✓\nJohn 8:31     ✗\nThe book and punctuation stay fixed. The chapter and verse can change. Here \\d stands for a digit, and + means one or more of the preceding item. We will work through those pieces before asking you to build a pattern."
+  },
+  {
+    "objectID": "slides.html#how-we-build-larger-patterns",
+    "href": "slides.html#how-we-build-larger-patterns",
+    "title": "Regular expressions: day 1",
+    "section": "How we build larger patterns",
+    "text": "How we build larger patterns\nA regex is made from a few types of instructions:\n\n\n\nInstruction\nWhat it lets us describe\n\n\n\n\nExact text\nA fixed book name or punctuation mark\n\n\nA choice\nOne allowed character or one allowed word\n\n\nRepetition\nA chapter with one, two, or more digits\n\n\nPosition\nThe beginning of a field or a word boundary\n\n\n\nPutting instructions next to each other describes their order. We will learn the notation for each one in the next few examples."
+  },
+  {
+    "objectID": "slides.html#searching-and-checking-a-whole-field",
+    "href": "slides.html#searching-and-checking-a-whole-field",
+    "title": "Regular expressions: day 1",
+    "section": "Searching and checking a whole field",
+    "text": "Searching and checking a whole field\nre.search() finds a pattern inside a string. re.fullmatch() checks whether the entire string fits.\nOur pattern is the literal text \"cat\". We wrap each result in bool() so the answer is True if there is a match and False otherwise. What will these three checks return?\nimport re\n\nbool(re.search(\"cat\", \"The cat slept\"))\nbool(re.fullmatch(\"cat\", \"The cat slept\"))\nbool(re.fullmatch(\"cat\", \"cat\"))\nPredict with a neighbor, then compare with the next slide."
+  },
+  {
+    "objectID": "slides.html#check-search-versus-fullmatch",
+    "href": "slides.html#check-search-versus-fullmatch",
+    "title": "Regular expressions: day 1",
+    "section": "Check: search versus fullmatch",
+    "text": "Check: search versus fullmatch\nsearch(\"cat\", \"The cat slept\")     → True\nfullmatch(\"cat\", \"The cat slept\")  → False\nfullmatch(\"cat\", \"cat\")            → True\nWe used bool() to ask whether a match exists. A search can succeed even when the whole field does not fit the rule."
+  },
+  {
+    "objectID": "slides.html#literal-characters-and-the-dot",
+    "href": "slides.html#literal-characters-and-the-dot",
+    "title": "Regular expressions: day 1",
+    "section": "Literal characters and the dot",
+    "text": "Literal characters and the dot\nMost characters match themselves. Some have special meanings.\nr\"byu.edu\": the dot matches almost any character.\nr\"byu\\.edu\": the escaped dot matches a literal period.\nThe r tells Python to pass the backslash to the regex engine. We will write patterns as raw strings from here on.\nWith a neighbor: Which pattern accepts byuXedu? Which accepts byu.edu?"
+  },
+  {
+    "objectID": "slides.html#check-the-dot",
+    "href": "slides.html#check-the-dot",
+    "title": "Regular expressions: day 1",
+    "section": "Check the dot",
+    "text": "Check the dot\nvalues = [\"byu.edu\", \"byuXedu\"]\nfor pattern in [r\"byu.edu\", r\"byu\\.edu\"]:\n    print(pattern, [bool(re.fullmatch(pattern, v)) for v in values])\nbyu.edu   [True, True]\nbyu\\.edu  [True, False]\nEscaping changes a special character back into the literal character."
+  },
+  {
+    "objectID": "slides.html#character-classes-choose-one-character",
+    "href": "slides.html#character-classes-choose-one-character",
+    "title": "Regular expressions: day 1",
+    "section": "Character classes choose one character",
+    "text": "Character classes choose one character\n[.-] matches one dot or hyphen. A range such as [A-Z] matches one capital letter.\nWe can combine ranges: [A-Za-z0-9] matches one letter or digit. We will use that in the email exercise.\nr\"801[-.]555\"   matches   801-555   and   801.555\nInside [ ], a dot usually has its ordinary meaning. Outside, . is a wildcard.\nPredict: Would [.-] match the two-character string .- as a whole field?"
+  },
+  {
+    "objectID": "slides.html#a-negative-character-class",
+    "href": "slides.html#a-negative-character-class",
+    "title": "Regular expressions: day 1",
+    "section": "A negative character class",
+    "text": "A negative character class\n[^aeiou] means one character other than a lowercase vowel.\n[bool(re.fullmatch(r\"[^aeiou]\", x)) for x in [\"a\", \"b\", \"7\"]]\n[False, True, True]\nIt also accepts 7. “Not a vowel” is broader than “a consonant.”"
+  },
+  {
+    "objectID": "slides.html#useful-shorthand-classes",
+    "href": "slides.html#useful-shorthand-classes",
+    "title": "Regular expressions: day 1",
+    "section": "Useful shorthand classes",
+    "text": "Useful shorthand classes\n\n\n\nPattern\nOne matching character\n\n\n\n\n\\d\ndigit\n\n\n\\s\nwhitespace, including many spaces that look ordinary\n\n\n\\w\nword character, including letters, digits, and _\n\n\n\\D, \\S, \\W\nthe corresponding opposites\n\n\n\n\\w is convenient, but it may include characters your task did not intend. In Python, it can also include Unicode letters."
+  },
+  {
+    "objectID": "slides.html#quantifiers-change-how-many",
+    "href": "slides.html#quantifiers-change-how-many",
+    "title": "Regular expressions: day 1",
+    "section": "Quantifiers change how many",
+    "text": "Quantifiers change how many\n\n\n\nPattern\nNumber of repetitions\nExample\n\n\n\n\n\\d{3}\nexactly 3\n801\n\n\n\\d{2,4}\n2 to 4\n12, 8421\n\n\n\\d+\nat least 1\n7, 343\n\n\n\\d*\n0 or more\n\"\", 77\n\n\nu?\n0 or 1\ncolor, colour in colou?r\n\n\n\nA quantifier acts on the item immediately before it. That item can be a character or a class. On the next slides, we will make a whole group count as one item."
+  },
+  {
+    "objectID": "slides.html#groups-choose-whole-alternatives",
+    "href": "slides.html#groups-choose-whole-alternatives",
+    "title": "Regular expressions: day 1",
+    "section": "Groups choose whole alternatives",
+    "text": "Groups choose whole alternatives\n(?:red|blue) car allows red car or blue car.\n[(v, bool(re.fullmatch(r\"(?:red|blue) car\", v)))\n for v in [\"red car\", \"blue car\", \"red truck\"]]\n[('red car', True), ('blue car', True), ('red truck', False)]\n(?: ... ) groups a choice. | separates the alternatives. We will use a named capturing group tomorrow when we need an extracted column."
+  },
+  {
+    "objectID": "slides.html#a-class-and-a-group-are-different",
+    "href": "slides.html#a-class-and-a-group-are-different",
+    "title": "Regular expressions: day 1",
+    "section": "A class and a group are different",
+    "text": "A class and a group are different\n\n\n\nPattern\nIts choice\n\n\n\n\n[cd]\none character, c or d\n\n\n(?:cat|dog)\none word, cat or dog\n\n\n\nPredict: Does [cat|dog] match the whole word cat? Why might it still find something inside cat with re.search?"
+  },
+  {
+    "objectID": "slides.html#check-the-class-and-the-group",
+    "href": "slides.html#check-the-class-and-the-group",
+    "title": "Regular expressions: day 1",
+    "section": "Check the class and the group",
+    "text": "Check the class and the group\nprint(bool(re.fullmatch(r\"[cat|dog]\", \"cat\")))\nprint(re.search(r\"[cat|dog]\", \"cat\").group())\nprint(bool(re.fullmatch(r\"(?:cat|dog)\", \"cat\")))\nFalse\n'c'\nTrue\n[cat|dog] still consumes one character. For whole words, choose between groups of characters."
+  },
+  {
+    "objectID": "slides.html#pause-what-is-being-repeated",
+    "href": "slides.html#pause-what-is-being-repeated",
+    "title": "Regular expressions: day 1",
+    "section": "Pause: what is being repeated?",
+    "text": "Pause: what is being repeated?\nCompare these patterns on the whole string hahaha!:\nr\"ha+!\"       # repeat the a\nr\"(?:ha)+!\"   # repeat the group ha\nThink, then pair: Which one matches? What string might the other match instead?"
+  },
+  {
+    "objectID": "slides.html#check-the-quantifiers-scope",
+    "href": "slides.html#check-the-quantifiers-scope",
+    "title": "Regular expressions: day 1",
+    "section": "Check the quantifier’s scope",
+    "text": "Check the quantifier’s scope\n[(p, bool(re.fullmatch(p, \"hahaha!\")))\n for p in [r\"ha+!\", r\"(?:ha)+!\"]]\n[('ha+!', False), ('(?:ha)+!', True)]\nha+! accepts haaa!. (?:ha)+! accepts hahaha!.\nThe parentheses determine what the + repeats."
+  },
+  {
+    "objectID": "slides.html#positions-are-different-from-characters",
+    "href": "slides.html#positions-are-different-from-characters",
+    "title": "Regular expressions: day 1",
+    "section": "Positions are different from characters",
+    "text": "Positions are different from characters\n\n\n\nPosition\nMeaning in today’s examples\n\n\n\n\n^\nstart of the string\n\n\n$\nend of the string\n\n\n\\b\nboundary between a word and a nonword character\n\n\n\nThese symbols do not consume a character. A word boundary can occur next to punctuation, not only next to a space.\nFor a whole field, re.fullmatch() often states our question more directly than adding ^ and $."
+  },
+  {
+    "objectID": "slides.html#read-and-decipher",
+    "href": "slides.html#read-and-decipher",
+    "title": "Regular expressions: day 1",
+    "section": "Read and decipher",
+    "text": "Read and decipher\nFirst think alone, then compare with a partner. Put each pattern into words. Give an example it accepts and one it rejects.\n\nr\"\\bcat\\b\"\nr\"\\b\\d{5}\\b\"\nr\"^[A-Z][a-z]+$\"\n\nFor #2, what would re.search return from 84043-4820?"
+  },
+  {
+    "objectID": "slides.html#read-and-decipher-discuss-the-answers",
+    "href": "slides.html#read-and-decipher-discuss-the-answers",
+    "title": "Regular expressions: day 1",
+    "section": "Read and decipher: discuss the answers",
+    "text": "Read and decipher: discuss the answers\n\n\n\n\n\n\n\n\nPattern\nReads as\nExample match\n\n\n\n\n\\bcat\\b\nthe word cat\ncat!, but not bobcat\n\n\n\\b\\d{5}\\b\na five-digit token\n84043 in 84043-4820\n\n\n^[A-Z][a-z]+$\na capitalized word with more lowercase letters\nKerby, but not KERBY\n\n\n\nWhich result might be misleading? A match to the first five digits does not establish that the entire field is a plain five-digit ZIP."
+  },
+  {
+    "objectID": "slides.html#whiteboard-challenge",
+    "href": "slides.html#whiteboard-challenge",
+    "title": "Regular expressions: day 1",
+    "section": "Whiteboard challenge",
+    "text": "Whiteboard challenge\nDivide into four groups. If there are more than four groups, repeat A through D.\n\nWrite a short regex without Python quotes for your group’s whole-field rule.\nCheck both accepted examples and the rejected example mentally.\nWrite the pattern on the board. Explain each piece and propose a new test that could challenge it.\n\n5 minutes to work, 7 minutes to share. Wait for each explanation before viewing the solution slides."
+  },
+  {
+    "objectID": "slides.html#your-groups-rule",
+    "href": "slides.html#your-groups-rule",
+    "title": "Regular expressions: day 1",
+    "section": "Your group’s rule",
+    "text": "Your group’s rule\n\n\n\nGroup\nAccept as whole fields\nReject\n\n\n\n\nA: ZIP\n84043, 84043-4820\n84043-482\n\n\nB: phone\n801-555-0142, 801.555.0142\n8015550142\n\n\nC: campus email\ntom@byu.edu, tom7@byu.edu\ntom@byuXedu\n\n\nD: citation\nJohn 8:31, Alma 34:32\nMosiah 3:19\n\n\n\nFor C, allow letters and digits before @ and require the literal domain byu.edu. For D, allow only John or Alma, a space, chapter, colon, and verse."
+  },
+  {
+    "objectID": "slides.html#pick-up-yesterdays-board-work",
+    "href": "slides.html#pick-up-yesterdays-board-work",
+    "title": "Regular expressions: day 1",
+    "section": "Pick up yesterday’s board work",
+    "text": "Pick up yesterday’s board work\nYour four groups wrote working rules for ZIP codes, phone numbers, campus emails, and John/Alma citations. Today every group will solve each new case.\nStart with the ZIP rule from the board: \\d{5}(?:-\\d{4})?\nIn your group: Which whole piece does ? make optional? Why would \\d{5}-?\\d{4} describe a different set of strings?"
+  },
+  {
+    "objectID": "slides.html#optional-means-the-whole-group",
+    "href": "slides.html#optional-means-the-whole-group",
+    "title": "Regular expressions: day 1",
+    "section": "Optional means the whole group",
+    "text": "Optional means the whole group\n\n\n\nPattern\nAccepts\nAlso accepts\n\n\n\n\n\\d{5}(?:-\\d{4})?\n84043\n84043-4820\n\n\n\\d{5}-?\\d{4}\n840434820\n84043-4820\n\n\n\nThe parentheses make the hyphen and four digits one optional piece. ? applies to the item immediately before it.\nTo match a literal parenthesis in a phone number, write \\( or \\); bare parentheses group a regex."
+  },
+  {
+    "objectID": "slides.html#group-challenge-1-phone-numbers",
+    "href": "slides.html#group-challenge-1-phone-numbers",
+    "title": "Regular expressions: day 1",
+    "section": "Group challenge 1: phone numbers",
+    "text": "Group challenge 1: phone numbers\nOur board rule handled 801-555-0142 and 801.555.0142. Extend it to handle parentheses too.\n\n\n\nAccept as whole fields\nReject\n\n\n\n\n801-555-0142\n(801 555 0142\n\n\n801.555.0142\n8015550142\n\n\n(801) 555 0142\n\n\n\n\nAll groups: Write a rule; explain how it treats the area code and the separator after it. Use \\( and \\) for literal parentheses. 3 minutes, then compare approaches."
+  },
+  {
+    "objectID": "slides.html#one-phone-rule-and-its-limits",
+    "href": "slides.html#one-phone-rule-and-its-limits",
+    "title": "Regular expressions: day 1",
+    "section": "One phone rule and its limits",
+    "text": "One phone rule and its limits\nimport re\n\nphone = r\"(?:\\d{3}[-.]|\\(\\d{3}\\) )\\d{3}[-. ]\\d{4}\"\nvalues = [\"801-555-0142\", \"801.555.0142\", \"(801) 555 0142\",\n          \"(801 555 0142\", \"8015550142\"]\nfor value in values:\n    print(value, bool(re.fullmatch(phone, value)))\n801-555-0142 True\n801.555.0142 True\n(801) 555 0142 True\n(801 555 0142 False\n8015550142 False\nNew test: It also accepts 801-555.0142. Would that matter for your data?"
+  },
+  {
+    "objectID": "slides.html#a-choice-is-different-from-an-option",
+    "href": "slides.html#a-choice-is-different-from-an-option",
+    "title": "Regular expressions: day 1",
+    "section": "A choice is different from an option",
+    "text": "A choice is different from an option\nFor an email written two ways, we need a separator in each position. We choose which form it takes:\n\n\n\nChoice\nMatches\n\n\n\n\n(?:@| \\(at\\) )\n@ or (at)\n\n\n(?:\\.| \\(dot\\) )\n. or (dot)\n\n\n\nThere is no ? here: omitting the separator would make an invalid address. The spaces around (at) and (dot) are part of those choices."
+  },
+  {
+    "objectID": "slides.html#group-challenge-2-written-out-emails",
+    "href": "slides.html#group-challenge-2-written-out-emails",
+    "title": "Regular expressions: day 1",
+    "section": "Group challenge 2: written-out emails",
+    "text": "Group challenge 2: written-out emails\n\n\n\nAccept as whole fields\nReject\n\n\n\n\ntom@byu.com\ntom@byuXcom\n\n\ntom (at) byu (dot) com\ntom at byu dot com\n\n\namy7@gmail.com\n\n\n\n\nAll groups: Compose a rule from the two choices on the previous slide. For this exercise, the username has letters or digits, the provider has letters, and the ending is com.\n3 minutes: Test both ordinary and written-out forms. Does your pattern also accept a mixed form?"
+  },
+  {
+    "objectID": "slides.html#one-email-rule-and-a-decision",
+    "href": "slides.html#one-email-rule-and-a-decision",
+    "title": "Regular expressions: day 1",
+    "section": "One email rule and a decision",
+    "text": "One email rule and a decision\nemail = (r\"[A-Za-z0-9]+(?:@| \\(at\\) )[A-Za-z]+\"\n         r\"(?:\\.| \\(dot\\) )com\")\nvalues = [\"tom@byu.com\", \"tom (at) byu (dot) com\",\n          \"amy7@gmail.com\", \"tom@byuXcom\", \"tom at byu dot com\"]\nfor value in values:\n    print(value, bool(re.fullmatch(email, value)))\ntom@byu.com True\ntom (at) byu (dot) com True\namy7@gmail.com True\ntom@byuXcom False\ntom at byu dot com False\nThis rule also accepts tom@byu (dot) com. If that mixture is not meaningful, we could check for it or standardize the written-out form in a data pipeline first."
+  },
+  {
+    "objectID": "slides.html#group-challenge-3-verse-ranges",
+    "href": "slides.html#group-challenge-3-verse-ranges",
+    "title": "Regular expressions: day 1",
+    "section": "Group challenge 3: verse ranges",
+    "text": "Group challenge 3: verse ranges\nYesterday’s John/Alma board rule was (?:John|Alma) \\d+:\\d+. Keep single verses and allow ranges too.\n\n\n\nAccept as whole fields\nReject\n\n\n\n\nJohn 8:31\nJohn 8:31–\n\n\nJohn 8:31-32\nMosiah 3:19\n\n\nAlma 34:32–33\n\n\n\n\nAll groups: Which whole piece should be optional? A range can use a hyphen or an en dash. 3 minutes, then defend your pattern."
+  },
+  {
+    "objectID": "slides.html#one-rule-for-one-verse-or-a-range",
+    "href": "slides.html#one-rule-for-one-verse-or-a-range",
+    "title": "Regular expressions: day 1",
+    "section": "One rule for one verse or a range",
+    "text": "One rule for one verse or a range\nshort_citation = r\"(?:John|Alma)\\s+\\d+:\\d+(?:[-–]\\d+)?\"\nvalues = [\"John 8:31\", \"John 8:31-32\", \"Alma 34:32–33\",\n          \"John 8:31–\", \"Mosiah 3:19\"]\nfor value in values:\n    print(value, bool(re.fullmatch(short_citation, value)))\nJohn 8:31 True\nJohn 8:31-32 True\nAlma 34:32–33 True\nJohn 8:31– False\nMosiah 3:19 False\n(?:[-–]\\d+)? makes the dash and ending verse digits optional together. \\s+ accepts a space between book and chapter."
+  },
+  {
+    "objectID": "slides.html#finding-text-changes-the-question",
+    "href": "slides.html#finding-text-changes-the-question",
+    "title": "Regular expressions: day 1",
+    "section": "Finding text changes the question",
+    "text": "Finding text changes the question\nre.fullmatch checks one entire field. re.findall returns the exact substrings found inside longer text.\ntext = \"John 8:31–32; Alma 34:32–33\"\nold_rule = r\"(?:John|Alma) \\d+:\\d+\"\nprint(re.findall(old_rule, text))\nprint(re.findall(short_citation, text))\n['John 8:31', 'Alma 34:32']\n['John 8:31–32', 'Alma 34:32–33']\nTell a partner: Why were the old matches plausible but incomplete? A good match test checks the entire returned substring."
+  },
+  {
+    "objectID": "slides.html#build-together-which-book-forms-matter",
+    "href": "slides.html#build-together-which-book-forms-matter",
+    "title": "Regular expressions: day 1",
+    "section": "Build together: which book forms matter?",
+    "text": "Build together: which book forms matter?\nOur two talks contain 1 Nephi, Nephi, John, Alma, Mosiah, D&C, and Doctrine and Covenants. We may also encounter Matt. and Matthew in other text.\nAs a class: Start with the John/Alma rule. What change to the book part would cover each new form? Which parts of the chapter and verse rule can stay the same?\nOur board rule deliberately rejected Mosiah 3:19. For extraction from these talks, that example should now match. We are extending our tested set of book forms, not claiming to recognize every possible scripture citation."
+  },
+  {
+    "objectID": "slides.html#add-the-numbered-book",
+    "href": "slides.html#add-the-numbered-book",
+    "title": "Regular expressions: day 1",
+    "section": "Add the numbered book",
+    "text": "Add the numbered book\nbook = r\"(?:John|Alma|Mosiah|(?:1\\s+)?Nephi)\"\n(?:1\\s+)?Nephi handles 1 Nephi and Nephi. The \\s+ also handles the nonbreaking space in 1 Nephi from our talk text.\nBefore moving on: Why would 1?\\s+Nephi fail to express this choice? What would you test to see whether matching only Nephi ever hides a longer book name?"
+  },
+  {
+    "objectID": "slides.html#add-names-and-abbreviations",
+    "href": "slides.html#add-names-and-abbreviations",
+    "title": "Regular expressions: day 1",
+    "section": "Add names and abbreviations",
+    "text": "Add names and abbreviations\nbook = (\n    r\"(?:John|Alma|Mosiah|(?:1\\s+)?Nephi|\"\n    r\"D&C|Doctrine and Covenants|\"\n    r\"Matt(?:hew|\\.))\"\n)\nD&C and Doctrine and Covenants are two complete alternatives. Matt(?:hew|\\.) shares the Matt prefix, then chooses hew or a literal period.\nCheck together: Which branch accepts Matt. 5:3? Which accepts Matthew 5:3? Which book did we add after yesterday’s group challenge?"
+  },
+  {
+    "objectID": "slides.html#compose-the-pieces-and-predict",
+    "href": "slides.html#compose-the-pieces-and-predict",
+    "title": "Regular expressions: day 1",
+    "section": "Compose the pieces and predict",
+    "text": "Compose the pieces and predict\nchapter_verse = r\"\\d+:\\d+(?:[-–]\\d+)?\"\ncitation = r\"\\b\" + book + r\"\\s+\" + chapter_verse + r\"\\b\"\ntext = \"Matt. 5:3; Matthew 5:3; 1 Nephi 8:27; D&C 19:16\"\nprint(re.findall(citation, text))\nFirst predict with a neighbor: Which exact four substrings should appear? \\b marks a word boundary so a book name cannot start in the middle of another word, or a verse end in the middle of a word."
+  },
+  {
+    "objectID": "slides.html#check-the-composed-rule",
+    "href": "slides.html#check-the-composed-rule",
+    "title": "Regular expressions: day 1",
+    "section": "Check the composed rule",
+    "text": "Check the composed rule\n['Matt. 5:3', 'Matthew 5:3', '1 Nephi 8:27', 'D&C 19:16']\nThe pattern is built from three parts: book choice, space, and chapter:verse with an optional range. Our constructed test checks those parts together before we use real talks.\nNew test: If someone wrote 2 Nephi 9:14, would our rule return the entire reference? Predict before we try it."
+  },
+  {
+    "objectID": "slides.html#check-real-talk-text",
+    "href": "slides.html#check-real-talk-text",
+    "title": "Regular expressions: day 1",
+    "section": "Check real talk text",
+    "text": "Check real talk text\nimport pandas as pd\n\ntalks = pd.read_csv(\"data/talks_sample.csv\")\nfor name, talk_text in zip(talks[\"talk_name\"], talks[\"text\"]):\n    matches = re.findall(citation, talk_text)\n    print(f\"{name}: {len(matches)} matches\")\nNow Is the Time: 7 matches\nThe Sacrament Can Help Us Become Holy: 6 matches\nThese are counts for the book forms we included. Before calling them scripture totals, we would inspect the returned strings and look for missed or partial citations."
+  },
+  {
+    "objectID": "slides.html#a-test-that-challenges-our-rule",
+    "href": "slides.html#a-test-that-challenges-our-rule",
+    "title": "Regular expressions: day 1",
+    "section": "A test that challenges our rule",
+    "text": "A test that challenges our rule\nprint(re.findall(citation, \"2 Nephi 9:14; John 8:31–\"))\n['Nephi 9:14', 'John 8:31']\nNeither substring is the complete reference we intended to extract. \\b does not prevent a match beginning after 2 or ending before a dash.\nIn pairs: Name one change or test you would try next. Decide whether to expand the book choices, inspect context around matches, or standardize the source text first."
+  },
+  {
+    "objectID": "slides.html#exit-question",
+    "href": "slides.html#exit-question",
+    "title": "Regular expressions: day 1",
+    "section": "Exit question",
+    "text": "Exit question\nChoose one of today’s three group problems. Which piece of its rule is optional, and which piece is an either-or choice?\nFor citations, give one case our current rule handles and one it mishandles. What test would reveal the difference?\nIn lab, we can extend the book forms, inspect both missed and accidental matches, and build a reusable extraction pipeline."
+  }
+]
