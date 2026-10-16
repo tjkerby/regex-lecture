@@ -292,85 +292,242 @@ Divide into **four groups**. If there are more than four groups, repeat A throug
 
 For C, allow letters and digits before `@` and require the literal domain `byu.edu`. For D, allow only John or Alma, a space, chapter, colon, and verse.
 
-## Board discussion
+## Pick up yesterday's board work
 
-As each group writes its rule, everyone else should ask:
+Your four groups wrote working rules for ZIP codes, phone numbers, campus emails, and John/Alma citations. Today **every group** will solve each new case.
 
-- Which piece makes the rejected example fail?
-- What *new* value would you test?
-- Does your rule look for part of a string, or check the whole field?
+Start with the ZIP rule from the board: `\d{5}(?:-\d{4})?`
 
-Different patterns may fit the examples. We can compare how they behave on an unseen value.
+**In your group:** Which *whole piece* does `?` make optional? Why would `\d{5}-?\d{4}` describe a different set of strings?
 
-## Group A: ZIP
+## Optional means the whole group
 
-One possible answer: `\d{5}(?:-\d{4})?`
+| Pattern | Accepts | Also accepts |
+|:--|:--|:--|
+| `\d{5}(?:-\d{4})?` | `84043` | `84043-4820` |
+| `\d{5}-?\d{4}` | `840434820` | `84043-4820` |
 
-~~~text
-84043        → True
-84043-4820   → True
-84043-482    → False
+The parentheses make the **hyphen and four digits** one optional piece. `?` applies to the item immediately before it.
+
+To match a literal parenthesis in a phone number, write `\(` or `\)`; bare parentheses group a regex.
+
+## Group challenge 1: phone numbers
+
+Our board rule handled `801-555-0142` and `801.555.0142`. Extend it to handle parentheses too.
+
+| Accept as **whole fields** | Reject |
+|:--|:--|
+| `801-555-0142` | `(801 555 0142` |
+| `801.555.0142` | `8015550142` |
+| `(801) 555 0142` | |
+
+**All groups:** Write a rule; explain how it treats the area code and the separator after it. Use `\(` and `\)` for literal parentheses. **3 minutes**, then compare approaches.
+
+## One phone rule and its limits
+
+~~~python
+import re
+
+phone = r"(?:\d{3}[-.]|\(\d{3}\) )\d{3}[-. ]\d{4}"
+values = ["801-555-0142", "801.555.0142", "(801) 555 0142",
+          "(801 555 0142", "8015550142"]
+for value in values:
+    print(value, bool(re.fullmatch(phone, value)))
 ~~~
 
-The optional group contains the hyphen **and** the four digits.
-
-**New test:** Would it accept a five-digit number that is not an assigned ZIP?
-
-## Group B: phone
-
-One possible answer: `\d{3}[-.]\d{3}[-.]\d{4}`
-
 ~~~text
-801-555-0142   → True
-801.555.0142   → True
-8015550142     → False
+801-555-0142 True
+801.555.0142 True
+(801) 555 0142 True
+(801 555 0142 False
+8015550142 False
 ~~~
 
-**New test:** It also accepts `801-555.0142`. Is a mixed separator acceptable for our task?
+**New test:** It also accepts `801-555.0142`. Would that matter for your data?
 
-## Group C: campus email
+## A choice is different from an option
 
-One possible answer: `[A-Za-z0-9]+@byu\.edu`
+For an email written two ways, we **need** a separator in each position. We choose which form it takes:
 
-~~~text
-tom@byu.edu    → True
-tom7@byu.edu   → True
-tom@byuXedu    → False
+| Choice | Matches |
+|:--|:--|
+| `(?:@| \(at\) )` | `@` or ` (at) ` |
+| `(?:\.| \(dot\) )` | `.` or ` (dot) ` |
+
+There is no `?` here: omitting the separator would make an invalid address. The spaces around `(at)` and `(dot)` are part of those choices.
+
+## Group challenge 2: written-out emails
+
+| Accept as **whole fields** | Reject |
+|:--|:--|
+| `tom@byu.com` | `tom@byuXcom` |
+| `tom (at) byu (dot) com` | `tom at byu dot com` |
+| `amy7@gmail.com` | |
+
+**All groups:** Compose a rule from the two choices on the previous slide. For this exercise, the username has letters or digits, the provider has letters, and the ending is `com`.
+
+**3 minutes:** Test both ordinary and written-out forms. Does your pattern also accept a *mixed* form?
+
+## One email rule and a decision
+
+~~~python
+email = (r"[A-Za-z0-9]+(?:@| \(at\) )[A-Za-z]+"
+         r"(?:\.| \(dot\) )com")
+values = ["tom@byu.com", "tom (at) byu (dot) com",
+          "amy7@gmail.com", "tom@byuXcom", "tom at byu dot com"]
+for value in values:
+    print(value, bool(re.fullmatch(email, value)))
 ~~~
 
-**New test:** It rejects `first.last@byu.edu`. How would the rule change if that address appeared in our data?
-
-## Group D: citation
-
-One possible answer: `(?:John|Alma) \d+:\d+`
-
 ~~~text
-John 8:31     → True
-Alma 34:32    → True
-Mosiah 3:19   → False
+tom@byu.com True
+tom (at) byu (dot) com True
+amy7@gmail.com True
+tom@byuXcom False
+tom at byu dot com False
 ~~~
 
-**New test:** What happens with `John 8:31–32`? A partial match can be mistaken for a complete citation.
+This rule also accepts `tom@byu (dot) com`. If that mixture is not meaningful, we could check for it or standardize the written-out form in a **data pipeline** first.
 
-## The next challenge: actual talk text
+## Group challenge 3: verse ranges
 
-In our two sample talks we find:
+Yesterday's John/Alma board rule was `(?:John|Alma) \d+:\d+`. Keep single verses and allow ranges too.
 
-~~~text
-1 Nephi 8:27
-Alma 34:32–33
-Doctrine and Covenants 121:35
-D&C 19:16
+| Accept as **whole fields** | Reject |
+|:--|:--|
+| `John 8:31` | `John 8:31–` |
+| `John 8:31-32` | `Mosiah 3:19` |
+| `Alma 34:32–33` | |
+
+**All groups:** Which *whole piece* should be optional? A range can use a hyphen or an en dash. **3 minutes**, then defend your pattern.
+
+## One rule for one verse or a range
+
+~~~python
+short_citation = r"(?:John|Alma)\s+\d+:\d+(?:[-–]\d+)?"
+values = ["John 8:31", "John 8:31-32", "Alma 34:32–33",
+          "John 8:31–", "Mosiah 3:19"]
+for value in values:
+    print(value, bool(re.fullmatch(short_citation, value)))
 ~~~
 
-**With a partner:** Name two assumptions from group D's rule that these values challenge. What would you inspect before making the rule more complicated?
+~~~text
+John 8:31 True
+John 8:31-32 True
+Alma 34:32–33 True
+John 8:31– False
+Mosiah 3:19 False
+~~~
 
-Tomorrow we will build a citation pattern in stages and check its matches against the talk text.
+`(?:[-–]\d+)?` makes **the dash and ending verse digits** optional together. `\s+` accepts a space between book and chapter.
+
+## Finding text changes the question
+
+`re.fullmatch` checks one entire field. `re.findall` returns the exact substrings found inside longer text.
+
+~~~python
+text = "John 8:31–32; Alma 34:32–33"
+old_rule = r"(?:John|Alma) \d+:\d+"
+print(re.findall(old_rule, text))
+print(re.findall(short_citation, text))
+~~~
+
+~~~text
+['John 8:31', 'Alma 34:32']
+['John 8:31–32', 'Alma 34:32–33']
+~~~
+
+**Tell a partner:** Why were the old matches plausible but incomplete? A good match test checks the **entire returned substring**.
+
+## Build together: which book forms matter?
+
+Our two talks contain `1 Nephi`, `Nephi`, `John`, `Alma`, `Mosiah`, `D&C`, and `Doctrine and Covenants`. We may also encounter `Matt.` and `Matthew` in other text.
+
+**As a class:** Start with the John/Alma rule. What change to the *book part* would cover each new form? Which parts of the chapter and verse rule can stay the same?
+
+Our board rule deliberately rejected `Mosiah 3:19`. For extraction from these talks, that example should now match. We are extending our **tested set of book forms**, not claiming to recognize every possible scripture citation.
+
+## Add the numbered book
+
+~~~python
+book = r"(?:John|Alma|Mosiah|(?:1\s+)?Nephi)"
+~~~
+
+`(?:1\s+)?Nephi` handles `1 Nephi` and `Nephi`. The `\s+` also handles the nonbreaking space in `1 Nephi` from our talk text.
+
+**Before moving on:** Why would `1?\s+Nephi` fail to express this choice? What would you test to see whether matching only `Nephi` ever hides a longer book name?
+
+## Add names and abbreviations
+
+~~~python
+book = (
+    r"(?:John|Alma|Mosiah|(?:1\s+)?Nephi|"
+    r"D&C|Doctrine and Covenants|"
+    r"Matt(?:hew|\.))"
+)
+~~~
+
+`D&C` and `Doctrine and Covenants` are two complete alternatives. `Matt(?:hew|\.)` shares the `Matt` prefix, then chooses `hew` or a literal period.
+
+**Check together:** Which branch accepts `Matt. 5:3`? Which accepts `Matthew 5:3`? Which book did we add after yesterday's group challenge?
+
+## Compose the pieces and predict
+
+~~~python
+chapter_verse = r"\d+:\d+(?:[-–]\d+)?"
+citation = r"\b" + book + r"\s+" + chapter_verse + r"\b"
+text = "Matt. 5:3; Matthew 5:3; 1 Nephi 8:27; D&C 19:16"
+print(re.findall(citation, text))
+~~~
+
+**First predict with a neighbor:** Which exact four substrings should appear? `\b` marks a word boundary so a book name cannot start in the middle of another word, or a verse end in the middle of a word.
+
+## Check the composed rule
+
+~~~text
+['Matt. 5:3', 'Matthew 5:3', '1 Nephi 8:27', 'D&C 19:16']
+~~~
+
+The pattern is built from three parts: **book choice**, **space**, and **chapter:verse with an optional range**. Our constructed test checks those parts together before we use real talks.
+
+**New test:** If someone wrote `2 Nephi 9:14`, would our rule return the entire reference? Predict before we try it.
+
+## Check real talk text
+
+~~~python
+import pandas as pd
+
+talks = pd.read_csv("data/talks_sample.csv")
+for name, talk_text in zip(talks["talk_name"], talks["text"]):
+    matches = re.findall(citation, talk_text)
+    print(f"{name}: {len(matches)} matches")
+~~~
+
+~~~text
+Now Is the Time: 7 matches
+The Sacrament Can Help Us Become Holy: 6 matches
+~~~
+
+These are counts for **the book forms we included**. Before calling them scripture totals, we would inspect the returned strings and look for missed or partial citations.
+
+## A test that challenges our rule
+
+~~~python
+print(re.findall(citation, "2 Nephi 9:14; John 8:31–"))
+~~~
+
+~~~text
+['Nephi 9:14', 'John 8:31']
+~~~
+
+Neither substring is the complete reference we intended to extract. `\b` does not prevent a match beginning after `2 ` or ending before a dash.
+
+**In pairs:** Name one change or test you would try next. Decide whether to expand the book choices, inspect context around matches, or standardize the source text first.
 
 ## Exit question
 
-Explain `r"[A-Z][a-z]{2,}"` in ordinary language.
+Choose one of today's three group problems. Which piece of its rule is **optional**, and which piece is an **either-or choice**?
 
-For a whole-field check, would it accept `Alma`? `1 Nephi`? Give one more value you would test.
+For citations, give one case our current rule handles and one it mishandles. What test would reveal the difference?
 
-The goal today was to read a pattern, compose a short one, and explain where its rule might fail.
+In lab, we can extend the book forms, inspect both missed and accidental matches, and build a reusable extraction pipeline.

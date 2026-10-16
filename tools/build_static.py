@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs"
 NAV = [
     ("index.html", "Overview"),
-    ("slides.html", "Day 1 slides"),
+    ("slides.html", "Lecture slides"),
     ("reference.html", "Pattern guide"),
 ]
 
@@ -108,7 +108,7 @@ def slides() -> None:
         head(meta["title"], "assets/slides.css")
         + '<body class="deck-page"><div class="deck-shell">'
         + '<header class="deck-topbar"><a href="index.html">← Lecture home</a>'
-        + '<span class="spacer"></span><span>Day 1 · Reading and building patterns</span></header>'
+        + '<span class="spacer"></span><span>Regular expressions · Patterns and real text</span></header>'
         + '<main class="deck" aria-label="Lecture slides">'
         + '\n'.join(sections)
         + '</main><nav class="deck-controls" aria-label="Slide navigation">'

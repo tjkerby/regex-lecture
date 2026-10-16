@@ -577,64 +577,258 @@
 </table>
 <p>For C, allow letters and digits before <code>@</code> and require the literal domain <code>byu.edu</code>. For D, allow only John or Alma, a space, chapter, colon, and verse.</p>
 </section>
-<section id="board-discussion" class="slide level2">
-<h2>Board discussion</h2>
-<p>As each group writes its rule, everyone else should ask:</p>
-<ul>
-<li>Which piece makes the rejected example fail?</li>
-<li>What <em>new</em> value would you test?</li>
-<li>Does your rule look for part of a string, or check the whole field?</li>
-</ul>
-<p>Different patterns may fit the examples. We can compare how they behave on an unseen value.</p>
+<section id="pick-up-yesterdays-board-work" class="slide level2">
+<h2>Pick up yesterday’s board work</h2>
+<p>Your four groups wrote working rules for ZIP codes, phone numbers, campus emails, and John/Alma citations. Today <strong>every group</strong> will solve each new case.</p>
+<p>Start with the ZIP rule from the board: <code>\d{5}(?:-\d{4})?</code></p>
+<p><strong>In your group:</strong> Which <em>whole piece</em> does <code>?</code> make optional? Why would <code>\d{5}-?\d{4}</code> describe a different set of strings?</p>
 </section>
-<section id="group-a-zip" class="slide level2">
-<h2>Group A: ZIP</h2>
-<p>One possible answer: <code>\d{5}(?:-\d{4})?</code></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb17-1"><a></a>84043        → True</span>
-<span id="cb17-2"><a></a>84043-4820   → True</span>
-<span id="cb17-3"><a></a>84043-482    → False</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The optional group contains the hyphen <strong>and</strong> the four digits.</p>
-<p><strong>New test:</strong> Would it accept a five-digit number that is not an assigned ZIP?</p>
+<section id="optional-means-the-whole-group" class="slide level2">
+<h2>Optional means the whole group</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Pattern</th>
+<th style="text-align: left;">Accepts</th>
+<th style="text-align: left;">Also accepts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>\d{5}(?:-\d{4})?</code></td>
+<td style="text-align: left;"><code>84043</code></td>
+<td style="text-align: left;"><code>84043-4820</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>\d{5}-?\d{4}</code></td>
+<td style="text-align: left;"><code>840434820</code></td>
+<td style="text-align: left;"><code>84043-4820</code></td>
+</tr>
+</tbody>
+</table>
+<p>The parentheses make the <strong>hyphen and four digits</strong> one optional piece. <code>?</code> applies to the item immediately before it.</p>
+<p>To match a literal parenthesis in a phone number, write <code>\(</code> or <code>\)</code>; bare parentheses group a regex.</p>
 </section>
-<section id="group-b-phone" class="slide level2">
-<h2>Group B: phone</h2>
-<p>One possible answer: <code>\d{3}[-.]\d{3}[-.]\d{4}</code></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb18-1"><a></a>801-555-0142   → True</span>
-<span id="cb18-2"><a></a>801.555.0142   → True</span>
-<span id="cb18-3"><a></a>8015550142     → False</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>New test:</strong> It also accepts <code>801-555.0142</code>. Is a mixed separator acceptable for our task?</p>
+<section id="group-challenge-1-phone-numbers" class="slide level2">
+<h2>Group challenge 1: phone numbers</h2>
+<p>Our board rule handled <code>801-555-0142</code> and <code>801.555.0142</code>. Extend it to handle parentheses too.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Accept as <strong>whole fields</strong></th>
+<th style="text-align: left;">Reject</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>801-555-0142</code></td>
+<td style="text-align: left;"><code>(801 555 0142</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>801.555.0142</code></td>
+<td style="text-align: left;"><code>8015550142</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>(801) 555 0142</code></td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<p><strong>All groups:</strong> Write a rule; explain how it treats the area code and the separator after it. Use <code>\(</code> and <code>\)</code> for literal parentheses. <strong>3 minutes</strong>, then compare approaches.</p>
 </section>
-<section id="group-c-campus-email" class="slide level2">
-<h2>Group C: campus email</h2>
-<p>One possible answer: <code>[A-Za-z0-9]+@byu\.edu</code></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb19-1"><a></a>tom@byu.edu    → True</span>
-<span id="cb19-2"><a></a>tom7@byu.edu   → True</span>
-<span id="cb19-3"><a></a>tom@byuXedu    → False</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>New test:</strong> It rejects <code>first.last@byu.edu</code>. How would the rule change if that address appeared in our data?</p>
+<section id="one-phone-rule-and-its-limits" class="slide level2">
+<h2>One phone rule and its limits</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a></a><span class="im">import</span> re</span>
+<span id="cb17-2"><a></a></span>
+<span id="cb17-3"><a></a>phone <span class="op">=</span> <span class="vs">r"</span>(?:<span class="dv">\d</span><span class="op">{3}</span><span class="pp">[-.]</span><span class="cf">|</span><span class="ch">\(</span><span class="dv">\d</span><span class="op">{3}</span><span class="ch">\)</span><span class="vs"> </span>)<span class="dv">\d</span><span class="op">{3}</span><span class="pp">[-. ]</span><span class="dv">\d</span><span class="op">{4}</span><span class="vs">"</span></span>
+<span id="cb17-4"><a></a>values <span class="op">=</span> [<span class="st">"801-555-0142"</span>, <span class="st">"801.555.0142"</span>, <span class="st">"(801) 555 0142"</span>,</span>
+<span id="cb17-5"><a></a>          <span class="st">"(801 555 0142"</span>, <span class="st">"8015550142"</span>]</span>
+<span id="cb17-6"><a></a><span class="cf">for</span> value <span class="kw">in</span> values:</span>
+<span id="cb17-7"><a></a>    <span class="bu">print</span>(value, <span class="bu">bool</span>(re.fullmatch(phone, value)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb18-1"><a></a>801-555-0142 True</span>
+<span id="cb18-2"><a></a>801.555.0142 True</span>
+<span id="cb18-3"><a></a>(801) 555 0142 True</span>
+<span id="cb18-4"><a></a>(801 555 0142 False</span>
+<span id="cb18-5"><a></a>8015550142 False</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>New test:</strong> It also accepts <code>801-555.0142</code>. Would that matter for your data?</p>
 </section>
-<section id="group-d-citation" class="slide level2">
-<h2>Group D: citation</h2>
-<p>One possible answer: <code>(?:John|Alma) \d+:\d+</code></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb20-1"><a></a>John 8:31     → True</span>
-<span id="cb20-2"><a></a>Alma 34:32    → True</span>
-<span id="cb20-3"><a></a>Mosiah 3:19   → False</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>New test:</strong> What happens with <code>John 8:31–32</code>? A partial match can be mistaken for a complete citation.</p>
+<section id="a-choice-is-different-from-an-option" class="slide level2">
+<h2>A choice is different from an option</h2>
+<p>For an email written two ways, we <strong>need</strong> a separator in each position. We choose which form it takes:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Choice</th>
+<th style="text-align: left;">Matches</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>(?:@| \(at\) )</code></td>
+<td style="text-align: left;"><code>@</code> or <code>(at)</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>(?:\.| \(dot\) )</code></td>
+<td style="text-align: left;"><code>.</code> or <code>(dot)</code></td>
+</tr>
+</tbody>
+</table>
+<p>There is no <code>?</code> here: omitting the separator would make an invalid address. The spaces around <code>(at)</code> and <code>(dot)</code> are part of those choices.</p>
 </section>
-<section id="the-next-challenge-actual-talk-text" class="slide level2">
-<h2>The next challenge: actual talk text</h2>
-<p>In our two sample talks we find:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb21-1"><a></a>1&nbsp;Nephi 8:27</span>
-<span id="cb21-2"><a></a>Alma 34:32–33</span>
-<span id="cb21-3"><a></a>Doctrine and Covenants 121:35</span>
-<span id="cb21-4"><a></a>D&amp;C 19:16</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>With a partner:</strong> Name two assumptions from group D’s rule that these values challenge. What would you inspect before making the rule more complicated?</p>
-<p>Tomorrow we will build a citation pattern in stages and check its matches against the talk text.</p>
+<section id="group-challenge-2-written-out-emails" class="slide level2">
+<h2>Group challenge 2: written-out emails</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Accept as <strong>whole fields</strong></th>
+<th style="text-align: left;">Reject</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>tom@byu.com</code></td>
+<td style="text-align: left;"><code>tom@byuXcom</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>tom (at) byu (dot) com</code></td>
+<td style="text-align: left;"><code>tom at byu dot com</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>amy7@gmail.com</code></td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<p><strong>All groups:</strong> Compose a rule from the two choices on the previous slide. For this exercise, the username has letters or digits, the provider has letters, and the ending is <code>com</code>.</p>
+<p><strong>3 minutes:</strong> Test both ordinary and written-out forms. Does your pattern also accept a <em>mixed</em> form?</p>
+</section>
+<section id="one-email-rule-and-a-decision" class="slide level2">
+<h2>One email rule and a decision</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a></a>email <span class="op">=</span> (<span class="vs">r"</span><span class="pp">[A-Za-z0-9]</span><span class="op">+</span>(?:<span class="vs">@</span><span class="cf">|</span><span class="vs"> </span><span class="ch">\(</span><span class="vs">at</span><span class="ch">\)</span><span class="vs"> </span>)<span class="pp">[A-Za-z]</span><span class="op">+</span><span class="vs">"</span></span>
+<span id="cb19-2"><a></a>         <span class="vs">r"</span>(?:<span class="ch">\.</span><span class="cf">|</span><span class="vs"> </span><span class="ch">\(</span><span class="vs">dot</span><span class="ch">\)</span><span class="vs"> </span>)<span class="vs">com"</span>)</span>
+<span id="cb19-3"><a></a>values <span class="op">=</span> [<span class="st">"tom@byu.com"</span>, <span class="st">"tom (at) byu (dot) com"</span>,</span>
+<span id="cb19-4"><a></a>          <span class="st">"amy7@gmail.com"</span>, <span class="st">"tom@byuXcom"</span>, <span class="st">"tom at byu dot com"</span>]</span>
+<span id="cb19-5"><a></a><span class="cf">for</span> value <span class="kw">in</span> values:</span>
+<span id="cb19-6"><a></a>    <span class="bu">print</span>(value, <span class="bu">bool</span>(re.fullmatch(email, value)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb20-1"><a></a>tom@byu.com True</span>
+<span id="cb20-2"><a></a>tom (at) byu (dot) com True</span>
+<span id="cb20-3"><a></a>amy7@gmail.com True</span>
+<span id="cb20-4"><a></a>tom@byuXcom False</span>
+<span id="cb20-5"><a></a>tom at byu dot com False</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This rule also accepts <code>tom@byu (dot) com</code>. If that mixture is not meaningful, we could check for it or standardize the written-out form in a <strong>data pipeline</strong> first.</p>
+</section>
+<section id="group-challenge-3-verse-ranges" class="slide level2">
+<h2>Group challenge 3: verse ranges</h2>
+<p>Yesterday’s John/Alma board rule was <code>(?:John|Alma) \d+:\d+</code>. Keep single verses and allow ranges too.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Accept as <strong>whole fields</strong></th>
+<th style="text-align: left;">Reject</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>John 8:31</code></td>
+<td style="text-align: left;"><code>John 8:31–</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>John 8:31-32</code></td>
+<td style="text-align: left;"><code>Mosiah 3:19</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>Alma 34:32–33</code></td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<p><strong>All groups:</strong> Which <em>whole piece</em> should be optional? A range can use a hyphen or an en dash. <strong>3 minutes</strong>, then defend your pattern.</p>
+</section>
+<section id="one-rule-for-one-verse-or-a-range" class="slide level2">
+<h2>One rule for one verse or a range</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a></a>short_citation <span class="op">=</span> <span class="vs">r"</span>(?:<span class="vs">John</span><span class="cf">|</span><span class="vs">Alma</span>)<span class="dv">\s</span><span class="op">+</span><span class="dv">\d</span><span class="op">+</span><span class="vs">:</span><span class="dv">\d</span><span class="op">+</span>(?:<span class="pp">[-–]</span><span class="dv">\d</span><span class="op">+</span>)<span class="op">?</span><span class="vs">"</span></span>
+<span id="cb21-2"><a></a>values <span class="op">=</span> [<span class="st">"John 8:31"</span>, <span class="st">"John 8:31-32"</span>, <span class="st">"Alma 34:32–33"</span>,</span>
+<span id="cb21-3"><a></a>          <span class="st">"John 8:31–"</span>, <span class="st">"Mosiah 3:19"</span>]</span>
+<span id="cb21-4"><a></a><span class="cf">for</span> value <span class="kw">in</span> values:</span>
+<span id="cb21-5"><a></a>    <span class="bu">print</span>(value, <span class="bu">bool</span>(re.fullmatch(short_citation, value)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb22-1"><a></a>John 8:31 True</span>
+<span id="cb22-2"><a></a>John 8:31-32 True</span>
+<span id="cb22-3"><a></a>Alma 34:32–33 True</span>
+<span id="cb22-4"><a></a>John 8:31– False</span>
+<span id="cb22-5"><a></a>Mosiah 3:19 False</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>(?:[-–]\d+)?</code> makes <strong>the dash and ending verse digits</strong> optional together. <code>\s+</code> accepts a space between book and chapter.</p>
+</section>
+<section id="finding-text-changes-the-question" class="slide level2">
+<h2>Finding text changes the question</h2>
+<p><code>re.fullmatch</code> checks one entire field. <code>re.findall</code> returns the exact substrings found inside longer text.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a></a>text <span class="op">=</span> <span class="st">"John 8:31–32; Alma 34:32–33"</span></span>
+<span id="cb23-2"><a></a>old_rule <span class="op">=</span> <span class="vs">r"</span>(?:<span class="vs">John</span><span class="cf">|</span><span class="vs">Alma</span>)<span class="vs"> </span><span class="dv">\d</span><span class="op">+</span><span class="vs">:</span><span class="dv">\d</span><span class="op">+</span><span class="vs">"</span></span>
+<span id="cb23-3"><a></a><span class="bu">print</span>(re.findall(old_rule, text))</span>
+<span id="cb23-4"><a></a><span class="bu">print</span>(re.findall(short_citation, text))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb24-1"><a></a>['John 8:31', 'Alma 34:32']</span>
+<span id="cb24-2"><a></a>['John 8:31–32', 'Alma 34:32–33']</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Tell a partner:</strong> Why were the old matches plausible but incomplete? A good match test checks the <strong>entire returned substring</strong>.</p>
+</section>
+<section id="build-together-which-book-forms-matter" class="slide level2">
+<h2>Build together: which book forms matter?</h2>
+<p>Our two talks contain <code>1&nbsp;Nephi</code>, <code>Nephi</code>, <code>John</code>, <code>Alma</code>, <code>Mosiah</code>, <code>D&amp;C</code>, and <code>Doctrine and Covenants</code>. We may also encounter <code>Matt.</code> and <code>Matthew</code> in other text.</p>
+<p><strong>As a class:</strong> Start with the John/Alma rule. What change to the <em>book part</em> would cover each new form? Which parts of the chapter and verse rule can stay the same?</p>
+<p>Our board rule deliberately rejected <code>Mosiah 3:19</code>. For extraction from these talks, that example should now match. We are extending our <strong>tested set of book forms</strong>, not claiming to recognize every possible scripture citation.</p>
+</section>
+<section id="add-the-numbered-book" class="slide level2">
+<h2>Add the numbered book</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a></a>book <span class="op">=</span> <span class="vs">r"</span>(?:<span class="vs">John</span><span class="cf">|</span><span class="vs">Alma</span><span class="cf">|</span><span class="vs">Mosiah</span><span class="cf">|</span>(?:<span class="vs">1</span><span class="dv">\s</span><span class="op">+</span>)<span class="op">?</span><span class="vs">Nephi</span>)<span class="vs">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>(?:1\s+)?Nephi</code> handles <code>1 Nephi</code> and <code>Nephi</code>. The <code>\s+</code> also handles the nonbreaking space in <code>1&nbsp;Nephi</code> from our talk text.</p>
+<p><strong>Before moving on:</strong> Why would <code>1?\s+Nephi</code> fail to express this choice? What would you test to see whether matching only <code>Nephi</code> ever hides a longer book name?</p>
+</section>
+<section id="add-names-and-abbreviations" class="slide level2">
+<h2>Add names and abbreviations</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a></a>book <span class="op">=</span> (</span>
+<span id="cb26-2"><a></a>    <span class="vs">r"</span>(?:<span class="vs">John</span><span class="cf">|</span><span class="vs">Alma</span><span class="cf">|</span><span class="vs">Mosiah</span><span class="cf">|</span>(?:<span class="vs">1</span><span class="dv">\s</span><span class="op">+</span>)<span class="op">?</span><span class="vs">Nephi</span><span class="cf">|</span><span class="vs">"</span></span>
+<span id="cb26-3"><a></a>    <span class="vs">r"D&amp;C</span><span class="cf">|</span><span class="vs">Doctrine and Covenants</span><span class="cf">|</span><span class="vs">"</span></span>
+<span id="cb26-4"><a></a>    <span class="vs">r"Matt</span>(?:<span class="vs">hew</span><span class="cf">|</span><span class="ch">\.</span>)<span class="er">)</span><span class="vs">"</span></span>
+<span id="cb26-5"><a></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>D&amp;C</code> and <code>Doctrine and Covenants</code> are two complete alternatives. <code>Matt(?:hew|\.)</code> shares the <code>Matt</code> prefix, then chooses <code>hew</code> or a literal period.</p>
+<p><strong>Check together:</strong> Which branch accepts <code>Matt. 5:3</code>? Which accepts <code>Matthew 5:3</code>? Which book did we add after yesterday’s group challenge?</p>
+</section>
+<section id="compose-the-pieces-and-predict" class="slide level2">
+<h2>Compose the pieces and predict</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a></a>chapter_verse <span class="op">=</span> <span class="vs">r"</span><span class="dv">\d</span><span class="op">+</span><span class="vs">:</span><span class="dv">\d</span><span class="op">+</span>(?:<span class="pp">[-–]</span><span class="dv">\d</span><span class="op">+</span>)<span class="op">?</span><span class="vs">"</span></span>
+<span id="cb27-2"><a></a>citation <span class="op">=</span> <span class="vs">r"</span><span class="dv">\b</span><span class="vs">"</span> <span class="op">+</span> book <span class="op">+</span> <span class="vs">r"</span><span class="dv">\s</span><span class="op">+</span><span class="vs">"</span> <span class="op">+</span> chapter_verse <span class="op">+</span> <span class="vs">r"</span><span class="dv">\b</span><span class="vs">"</span></span>
+<span id="cb27-3"><a></a>text <span class="op">=</span> <span class="st">"Matt. 5:3; Matthew 5:3; 1 Nephi 8:27; D&amp;C 19:16"</span></span>
+<span id="cb27-4"><a></a><span class="bu">print</span>(re.findall(citation, text))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>First predict with a neighbor:</strong> Which exact four substrings should appear? <code>\b</code> marks a word boundary so a book name cannot start in the middle of another word, or a verse end in the middle of a word.</p>
+</section>
+<section id="check-the-composed-rule" class="slide level2">
+<h2>Check the composed rule</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb28-1"><a></a>['Matt. 5:3', 'Matthew 5:3', '1 Nephi 8:27', 'D&amp;C 19:16']</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The pattern is built from three parts: <strong>book choice</strong>, <strong>space</strong>, and <strong>chapter:verse with an optional range</strong>. Our constructed test checks those parts together before we use real talks.</p>
+<p><strong>New test:</strong> If someone wrote <code>2 Nephi 9:14</code>, would our rule return the entire reference? Predict before we try it.</p>
+</section>
+<section id="check-real-talk-text" class="slide level2">
+<h2>Check real talk text</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb29-2"><a></a></span>
+<span id="cb29-3"><a></a>talks <span class="op">=</span> pd.read_csv(<span class="st">"data/talks_sample.csv"</span>)</span>
+<span id="cb29-4"><a></a><span class="cf">for</span> name, talk_text <span class="kw">in</span> <span class="bu">zip</span>(talks[<span class="st">"talk_name"</span>], talks[<span class="st">"text"</span>]):</span>
+<span id="cb29-5"><a></a>    matches <span class="op">=</span> re.findall(citation, talk_text)</span>
+<span id="cb29-6"><a></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">len</span>(matches)<span class="sc">}</span><span class="ss"> matches"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb30-1"><a></a>Now Is the Time: 7 matches</span>
+<span id="cb30-2"><a></a>The Sacrament Can Help Us Become Holy: 6 matches</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>These are counts for <strong>the book forms we included</strong>. Before calling them scripture totals, we would inspect the returned strings and look for missed or partial citations.</p>
+</section>
+<section id="a-test-that-challenges-our-rule" class="slide level2">
+<h2>A test that challenges our rule</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a></a><span class="bu">print</span>(re.findall(citation, <span class="st">"2 Nephi 9:14; John 8:31–"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb32-1"><a></a>['Nephi 9:14', 'John 8:31']</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Neither substring is the complete reference we intended to extract. <code>\b</code> does not prevent a match beginning after <code>2</code> or ending before a dash.</p>
+<p><strong>In pairs:</strong> Name one change or test you would try next. Decide whether to expand the book choices, inspect context around matches, or standardize the source text first.</p>
 </section>
 <section id="exit-question" class="slide level2">
 <h2>Exit question</h2>
-<p>Explain <code>r"[A-Z][a-z]{2,}"</code> in ordinary language.</p>
-<p>For a whole-field check, would it accept <code>Alma</code>? <code>1 Nephi</code>? Give one more value you would test.</p>
-<p>The goal today was to read a pattern, compose a short one, and explain where its rule might fail.</p>
+<p>Choose one of today’s three group problems. Which piece of its rule is <strong>optional</strong>, and which piece is an <strong>either-or choice</strong>?</p>
+<p>For citations, give one case our current rule handles and one it mishandles. What test would reveal the difference?</p>
+<p>In lab, we can extend the book forms, inspect both missed and accidental matches, and build a reusable extraction pipeline.</p>
 
 
 </section>
